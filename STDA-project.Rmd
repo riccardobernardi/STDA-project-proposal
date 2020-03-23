@@ -1,0 +1,69 @@
+---
+title: "STDA-project"
+output: html_document
+---
+
+
+```{r}
+data <- read.csv("foreignsim_2019-11-07.csv",sep = ";")
+summary(data)
+```
+
+```{r}
+head(data,30)
+```
+
+
+
+```{r}
+#require(dplyr)
+#group_by(data, "date")
+```
+
+
+```{r}
+data$date <- as.Date(data$date, format = "%Y-%m-%d")
+```
+
+
+
+```{r}
+data.ts <- ts(data$total.foreign.sim)
+```
+
+
+```{r}
+main <- "foreign sim per day"
+ylab<-"Tot of sim in that day"
+plot(data.ts,ylab=ylab,main=main)
+```
+
+
+```{r}
+#data.ts
+```
+
+
+
+```{r}
+tt<-as.numeric(time(data.ts))
+fit2<-lm(data.ts~poly(tt,degree=2,raw=TRUE))
+fit4<-lm(data.ts~poly(tt,degree=4,raw=TRUE))
+```
+
+
+
+```{r}
+main <- "foreign sim per day"
+plot(data.ts,ylab=ylab,main=main)
+lines(tt,predict(fit2),col='red',lwd=2)
+lines(tt,predict(fit4),col='blue',lwd=2)
+legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red","blue"))
+```
+
+
+
+
+
+
+
