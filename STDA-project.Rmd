@@ -6,41 +6,41 @@ output: html_document
 
 ```{r}
 data <- read.csv("foreignsim_2019-11-07.csv",sep = ";")
-summary(data)
-```
-
-```{r}
-head(data,30)
-```
-
-
-
-```{r}
-#require(dplyr)
-#group_by(data, "date")
-```
-
-
-```{r}
-data$date <- as.Date(data$date, format = "%Y-%m-%d")
+data$prefix <- NULL
+data$country <- NULL
+data$num <- NULL
+max(as.Date(data$date))
 ```
 
 
 
 ```{r}
-data.ts <- ts(data$total.foreign.sim)
+ll <- aggregate.data.frame(data$total.ita.sim,by=list(data$date),FUN=mean)
+names(ll)[2] <- "total.ita.sim"
+names(ll)[1] <- "Date"
+ll$total.foreign.sim <- aggregate(data$total.foreign.sim,by=list(data$date),FUN=mean)$x
+data <- ll
 ```
+
+
+```{r}
+head(data)
+```
+
+
+
+```{r}
+data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
+#typeof(data$date[1])
+data.ts <- ts(data$total.foreign.sim, start=c(2019,1), frequency = 365)
+```
+
 
 
 ```{r}
 main <- "foreign sim per day"
 ylab<-"Tot of sim in that day"
-plot(data.ts,ylab=ylab,main=main)
-```
-
-
-```{r}
-#data.ts
+plot.ts(data.ts,ylab=ylab,main=main)
 ```
 
 
@@ -48,7 +48,7 @@ plot(data.ts,ylab=ylab,main=main)
 ```{r}
 tt<-as.numeric(time(data.ts))
 fit2<-lm(data.ts~poly(tt,degree=2,raw=TRUE))
-fit4<-lm(data.ts~poly(tt,degree=4,raw=TRUE))
+fit4<-lm(data.ts~poly(tt,degree=5,raw=TRUE))
 ```
 
 
