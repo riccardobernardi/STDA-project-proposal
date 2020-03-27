@@ -5,11 +5,13 @@ output: html_document
 
 
 ```{r}
+require(zoo)
+require(xts)
 data <- read.csv("foreignsim_2019-11-07.csv",sep = ";")
 data$prefix <- NULL
 data$country <- NULL
 data$num <- NULL
-max(as.Date(data$date))
+#max(as.Date(data$date))
 ```
 
 
@@ -24,23 +26,30 @@ data <- ll
 
 
 ```{r}
-head(data)
-```
-
-
-
-```{r}
 data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
 #typeof(data$date[1])
-data.ts <- ts(data$total.foreign.sim, start=c(2019,1), frequency = 365)
+data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 365)
+data.ts <- ts(data$total.foreign.sim)
+
+main <- "foreign sim per day"
+ylab<-"Tot of sim in that day"
+plot(data.xts,ylab=ylab,main=main)
 ```
 
 
 
 ```{r}
-main <- "foreign sim per day"
-ylab<-"Tot of sim in that day"
-plot.ts(data.ts,ylab=ylab,main=main)
+#data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
+#typeof(data$date[1])
+#data.ts <- ts(data$total.foreign.sim, start=c(2019,1), frequency = 365)
+```
+
+
+
+```{r}
+#main <- "foreign sim per day"
+#ylab<-"Tot of sim in that day"
+#plot.ts(data.ts,ylab=ylab,main=main)
 ```
 
 
@@ -48,7 +57,7 @@ plot.ts(data.ts,ylab=ylab,main=main)
 ```{r}
 tt<-as.numeric(time(data.ts))
 fit2<-lm(data.ts~poly(tt,degree=2,raw=TRUE))
-fit4<-lm(data.ts~poly(tt,degree=5,raw=TRUE))
+fit4<-lm(data.ts~poly(tt,degree=4,raw=TRUE))
 ```
 
 
@@ -63,7 +72,9 @@ legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red"
 
 
 
-
+```{r}
+#monthplot(data.ts)
+```
 
 
 
