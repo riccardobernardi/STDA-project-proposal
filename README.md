@@ -10,14 +10,31 @@ The dataset comes from the open data provided by all the municipalities of Milan
 
 Characteristics of the DataSet:
 
-- the dataset contains 3 columns "Date, #ItalianSims, #ForeignSims"
-- has 365+300 rows, 365 from 2018, 300 from 2019
+- the dataset contains 3 columns "Date, Number_of_Foreign_Sims"
+- has 658 rows
 - the year 2018 goes from 01/01/18 to 31/12/18
 - the year 2019 goes from 01/01/19 to 30/10/19
 - the datasets have no NA
 - no lacking days
-- the Date is a Date type
-- the number of sims (both italian and foreign) are numbers in double precision
+- the number of sims is a discrete variable about total number of foreign sims in a certain Date
+
+
+
+### Exploratory Data Analysis:
+
+About the Number_of_Foreign_Sims column:
+
+| Min  | Lower-hinge | Median | Upper-hinge | Max  |
+| ---- | ----------- | ------ | ----------- | ---- |
+| 1    | 59          | 95     | 124         | 344  |
+
+Histogram:
+
+![](/Users/rr/Documents/GitHub/STDA-project-proposal/Screenshot 2020-03-28 at 18.18.01.png)
+
+The time serie:
+
+![](/Users/rr/Documents/GitHub/STDA-project-proposal/Screenshot 2020-03-28 at 18.18.37.png)
 
 
 
