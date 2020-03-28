@@ -7,21 +7,27 @@ output: html_document
 ```{r}
 require(zoo)
 require(xts)
-data <- read.csv("foreignsim_2019-11-07.csv",sep = ";")
+data <- read.csv("sims2018milan.csv",sep = ";")
+data <- rbind(data, read.csv("foreignsim_2019-11-07.csv",sep = ";"))
+
 data$prefix <- NULL
 data$country <- NULL
 data$num <- NULL
-#max(as.Date(data$date))
+data$total.ita.sim <- NULL
 ```
 
 
 
 ```{r}
-ll <- aggregate.data.frame(data$total.ita.sim,by=list(data$date),FUN=mean)
-names(ll)[2] <- "total.ita.sim"
+ll <- aggregate.data.frame(data$total.foreign.sim,by=list(data$date),FUN=mean)
+names(ll)[2] <- "total.foreign.sim"
 names(ll)[1] <- "Date"
-ll$total.foreign.sim <- aggregate(data$total.foreign.sim,by=list(data$date),FUN=mean)$x
 data <- ll
+
+print("minimum, lower-hinge, median, upper-hinge, maximum)")
+fivenum(data$total.foreign.sim)
+dim(data)
+hist(data$total.foreign.sim)
 ```
 
 
