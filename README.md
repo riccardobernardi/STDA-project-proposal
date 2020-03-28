@@ -6,23 +6,22 @@ The dataset that I've chosen is about the presence of foreign smartphone's sims 
 
 ### Data:
 
-The dataset comes from the open data provided by all the municipalities of Milan. This repository is available at dati.gov.it. From this repository I selected the data going from January of 2018 to October of the 2019(approximately 2 years split into 2 different datasets). 
+The dataset comes from the open data provided by all the municipalities of Milan. This repository is available at dati.gov.it. From this repository I selected the data going from January of 2018 to October of the 2019.
 
 Characteristics of the DataSet:
 
-- the dataset contains 3 columns "Date, Number_of_Foreign_Sims"
+- the dataset contains 2 columns "Date, Number_of_Foreign_Sims"
 - has 658 rows
-- the year 2018 goes from 01/01/18 to 31/12/18
-- the year 2019 goes from 01/01/19 to 30/10/19
+- Dates goes from from 01/01/18 to 30/10/19 (~2 years)
 - the datasets have no NA
 - no lacking days
-- the number of sims is a discrete variable about total number of foreign sims in a certain Date
+- the "Number_of_Foreign_Sims" is a discrete variable about total number of foreign sims in a certain Date connected to the OpenWifi of Milan
 
 
 
 ### Exploratory Data Analysis:
 
-About the Number_of_Foreign_Sims column:
+About the Number_of_Foreign_Sims column(Tukey's fivenum):
 
 | Min  | Lower-hinge | Median | Upper-hinge | Max  |
 | ---- | ----------- | ------ | ----------- | ---- |
@@ -32,7 +31,7 @@ Histogram:
 
 ![](/Users/rr/Documents/GitHub/STDA-project-proposal/Screenshot 2020-03-28 at 18.18.01.png)
 
-The time serie:
+The time-serie:
 
 ![](/Users/rr/Documents/GitHub/STDA-project-proposal/Screenshot 2020-03-28 at 18.18.37.png)
 
