@@ -43,23 +43,6 @@ plot(data.xts,ylab=ylab,main=main)
 ```
 
 
-
-```{r}
-#data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
-#typeof(data$date[1])
-#data.ts <- ts(data$total.foreign.sim, start=c(2019,1), frequency = 365)
-```
-
-
-
-```{r}
-#main <- "foreign sim per day"
-#ylab<-"Tot of sim in that day"
-#plot.ts(data.ts,ylab=ylab,main=main)
-```
-
-
-
 ```{r}
 tt<-as.numeric(time(data.ts))
 fit2<-lm(data.ts~poly(tt,degree=2,raw=TRUE))
@@ -79,8 +62,65 @@ legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red"
 
 
 ```{r}
-#monthplot(data.ts)
+data.xts.log <- xts(sqrt(data$total.foreign.sim), order.by=data$Date, frequency = 365)
+
+main <- "foreign sim per day"
+ylab<-"Tot of sim in that day"
+plot(data.xts.log,ylab=ylab,main=main)
 ```
+
+# Decomposing non seasonal data
+
+```{r}
+require(TTR)
+data.ts.ma <- SMA(data.ts, n=5)
+plot.ts(data.ts.ma)
+```
+
+
+```{r}
+# Decomposing seasonal data
+#data.ts.dec <- decompose(data.ts)
+#plot.ts(data.ts.dec)
+#Error in decompose(data.ts) : time series has no or less than 2 periods
+# so no seasonality ca be fou d by R
+```
+
+
+```{r}
+#install.packages("forecast")
+library(forecast)
+trend.data = ma(data.ts, order = 12, centre = T)
+plot(data.ts)
+lines(trend.data, col="red")
+```
+
+# Detrending
+
+```{r}
+detrend.data = data.ts - trend.data
+plot(detrend.data)
+```
+
+# Finding seasonality
+
+```{r}
+m_data = t(matrix(data = detrend.data, nrow = 4))
+seasonal.data = colMeans(m_data, na.rm = T)
+plot(as.ts(rep(seasonal.data,16)))
+```
+
+# the rest is residuals
+
+```{r}
+random.data = data.ts - trend.data - seasonal.data
+plot(random.data)
+```
+
+
+
+
+
 
 
 
