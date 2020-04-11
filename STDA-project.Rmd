@@ -117,9 +117,18 @@ random.data = data.ts - trend.data - seasonal.data
 plot(random.data)
 ```
 
+```{r}
+Box.test(random.data, lag=10, fitdf=0)
+```
 
 
+```{r}
+Box.test(random.data, lag=10, fitdf=0, type="Lj")
+```
 
+```{r}
+checkresiduals(naive(random.data))
+```
 
 
 
