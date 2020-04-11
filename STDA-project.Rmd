@@ -1,6 +1,8 @@
 ---
 title: "STDA-project"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 
@@ -24,9 +26,12 @@ names(ll)[2] <- "total.foreign.sim"
 names(ll)[1] <- "Date"
 data <- ll
 
+dim(data)
+data <- data[-c(656,657,658), ]
+dim(data)
+
 print("minimum, lower-hinge, median, upper-hinge, maximum)")
 fivenum(data$total.foreign.sim)
-dim(data)
 hist(data$total.foreign.sim)
 ```
 
@@ -95,11 +100,55 @@ plot(data.ts)
 lines(trend.data, col="red")
 ```
 
-# Detrending
+# acf & pacf
 
 ```{r}
-detrend.data = data.ts - trend.data
-plot(detrend.data)
+acf(data.ts, 40)
+```
+
+Every 7 lags the peak recurs
+
+```{r}
+# Part (c)
+t = time(data.ts) 
+FIT = lm(data.ts ~ t) 
+summary(FIT)
+```
+
+```{r}
+X = as.vector(time(data.ts))
+plot(X, data.ts, xlab = "Year", ylab = "CO2 Level", type = "l") 
+abline(FIT)
+```
+
+
+```{r}
+require(TSA)
+RES = rstudent(FIT)
+plot(X, RES, xlab = "Year", ylab = "Standardized Residuals", type = "l") 
+points(X, RES)
+```
+
+```{r}
+acf(RES, main = "Standardized Residuals", 36)
+```
+
+
+```{r}
+pacf(data.ts)
+```
+
+
+
+# Detrending
+
+
+```{r}
+require(pracma)
+#detrend.data = data.ts - trend.data
+detrend.data = detrend(as.matrix(data.ts), 'linear', 5)
+plot(data.ts)
+lines(data.ts - detrend.data, col="red")
 ```
 
 # Finding seasonality
@@ -126,10 +175,72 @@ Box.test(random.data, lag=10, fitdf=0)
 Box.test(random.data, lag=10, fitdf=0, type="Lj")
 ```
 
+There is strong evidence that data is non stationary but im not able to decompose the seasonality
+
 ```{r}
 checkresiduals(naive(random.data))
 ```
 
 
+# trying to fix
 
+```{r}
+library(pracma)
+data.ts.box <- BoxCox(data.ts,lambda=0.3)
+data.ts <- data.ts.box
+SP.hampel <- hampel(data.ts, 5, 3)
+SP.hampel$ind
+
+SP.hampel.outlier.times <- vector()
+SP.hampel.outlier.values <- vector()
+i <- 1
+for (ind in SP.hampel$ind) {
+    SP.hampel.outlier.times[i] <- time(data.ts)[ind]
+    SP.hampel.outlier.values[i] <- data.ts[ind]
+    i <- i + 1
+}
+options(repr.plot.width=8, repr.plot.height=4)
+plot(data.ts, col="dodgerblue2")
+points(SP.hampel.outlier.times, SP.hampel.outlier.values,
+    pch=4, col="red")
+grid()
+```
+
+
+```{r}
+plot(data.ts, lwd=1.5, col="red")
+lines(SP.hampel$y, lwd=1.5, col="dodgerblue2")
+```
+
+
+```{r}
+data.ts.out <- ts(SP.hampel$y)
+plot(data.ts.out)
+data.ts <- data.ts.out
+```
+
+
+
+```{r}
+require(fpp)
+# data.ts.box <- BoxCox(data.ts,lambda=0.4)
+fit <- Arima(data.ts.box, order=c(3,1,3))
+summary(fit)
+```
+
+```{r}
+checkresiduals(fit)
+```
+
+```{r}
+autoplot(forecast(fit))
+
+```
+
+
+
+```{r}
+tseries_lf5 <- filter(data.ts, filter = rep(1/5, 5), sides = 1)
+plot.ts(cbind(data.ts, tseries_lf5), plot.type = 'single', col = c('black', 'red'))
+```
 
