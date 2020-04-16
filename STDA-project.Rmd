@@ -244,3 +244,21 @@ tseries_lf5 <- filter(data.ts, filter = rep(1/5, 5), sides = 1)
 plot.ts(cbind(data.ts, tseries_lf5), plot.type = 'single', col = c('black', 'red'))
 ```
 
+
+# Auto Arima
+
+
+```{r}
+require(fpp)
+auto.arima(data.ts,stepwise=TRUE,trace=TRUE,ic = "bic")
+```
+
+
+
+```{r}
+frequency(data.ts)
+```
+
+
+
+
