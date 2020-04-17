@@ -67,6 +67,7 @@ legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red"
 # detrend usong LM
 
 ```{r}
+require(fpp)
 detrended.lin <- data.ts - ma(data.ts, order = 7, centre = T)
 #detrended.lin <- data.ts - predict(fit4)
 plot(detrended.lin)
@@ -124,13 +125,93 @@ autoplot(forecast(fit))
 
 ```{r}
 require(fpp)
-auto.arima(differenced,stepwise=TRUE,trace=TRUE,ic = "bic")
+auto.arima(data.ts,stepwise=TRUE,trace=TRUE,ic = "bic")
+aa <- Arima(order = c(3,1,1), seasonal = c(2,0,0), y = data.ts)
 ```
+
+```{r}
+plot(forecast(aa,data.ts))
+```
+
 
 
 
 ```{r}
 frequency(data.ts)
+```
+
+
+# GARCH Model
+
+```{r}
+library(rugarch)
+
+spec <- ugarchspec()
+fit <- ugarchfit(spec = spec, data = data.ts)
+#forc = ugarchforecast(fit, n.ahead=20)
+forc <- ugarchforecast(spec, n.ahead = 1, n.roll = 654, data = data.ts[1:655, ,drop=FALSE], out.sample = 654)
+forc
+plot(data.ts)
+plot(forc,which="all")
+```
+
+```{r}
+library(rugarch)
+library(xts)
+fit = ugarchfit(ugarchspec(), data.ts, out.sample = 10)
+c(is(sigma((fit))), is(fitted(fit)), is(residuals(fit)))
+## [1] 'xts' 'xts' 'xts'
+##
+plot(xts(fit@model$modeldata$data, fit@model$modeldata$index), auto.grid = FALSE,
+    minor.ticks = FALSE, main = 'S&P500 Conditional Mean')
+lines(fitted(fit), col = 2)
+grid()
+```
+
+```{r}
+plot(xts(abs(fit@model$modeldata$data), fit@model$modeldata$index), auto.grid = FALSE,
+    minor.ticks = FALSE, main = 'S&P500 Conditional Sigma', col = 'grey')
+lines(sigma(fit), col = 'steelblue')
+grid()
+```
+
+
+# searching for inner seasolanalities
+
+```{r}
+library(lubridate)
+library(dplyr)
+library(forecast)
+library(ggplot2)
+library(scales)
+
+data.ts %>% decompose() %>% autoplot()
+dec <- decompose(data.ts)
+acf(na.omit(dec$random))
+```
+
+
+# Should continue the decomposition
+
+```{r}
+ts(dec$random,frequency=5) %>% decompose() %>% autoplot()
+dec2 <- decompose(ts(dec$random,frequency=5))
+acf(na.omit(dec2$random))
+```
+
+
+# Transforming into msts
+
+
+```{r}
+msts_cons <- msts(as.data.frame(data.ts), seasonal.periods = c(7, 30, 3*30, 6*30))
+msts_cons %>% mstl() %>% autoplot()
+decomposed <- mstl(msts_cons)
+attributes(decomposed)
+```
+
+```{r}
+decomposed["Remainder"]
 ```
 
 
