@@ -198,29 +198,6 @@ frequency(data.ts)
 ```
 
 
-# GARCH Model
-
-```{r}
-library(rugarch)
-library(xts)
-fit = ugarchfit(ugarchspec(), data.ts, out.sample = 10)
-c(is(sigma((fit))), is(fitted(fit)), is(residuals(fit)))
-## [1] 'xts' 'xts' 'xts'
-##
-plot(xts(fit@model$modeldata$data, fit@model$modeldata$index), auto.grid = FALSE,
-    minor.ticks = FALSE, main = 'Conditional Mean')
-lines(fitted(fit), col = 2)
-grid()
-```
-
-```{r}
-plot(xts(abs(fit@model$modeldata$data), fit@model$modeldata$index), auto.grid = FALSE,
-    minor.ticks = FALSE, main = 'S&P500 Conditional Sigma', col = 'grey')
-lines(sigma(fit), col = 'steelblue')
-grid()
-```
-
-
 # Searching for multi seasonalities
 
 without differentiation residuals looks pretty bad
