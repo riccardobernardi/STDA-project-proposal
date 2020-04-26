@@ -54,8 +54,9 @@ set.seed(25061997)
 
 require(zoo)
 require(xts)
-data <- read.csv("sims2018milan.csv",sep = ";")
-data <- rbind(data, read.csv("foreignsim_2019-11-07.csv",sep = ";"))
+data <- read.csv("opendatamilano2017.csv",sep = ";")
+data <- rbind(data, read.csv("opendatamilano2018.csv",sep = ";"))
+data <- rbind(data, read.csv("opendatamilano2019.csv",sep = ";"))
 
 data$prefix <- NULL
 data$country <- NULL
@@ -67,7 +68,10 @@ names(ll)[2] <- "total.foreign.sim"
 names(ll)[1] <- "Date"
 data <- ll
 
-data <- data[-c(656,657,658), ]
+data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
+#typeof(data$date[1])
+data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 30)
+data.ts <- ts(data$total.foreign.sim, frequency = 30)
 ```
 
 # Exploration of the Data
@@ -84,11 +88,6 @@ hist(data$total.foreign.sim)
 We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 01.01.2018 to 30.10.2019. Data is here:
 
 ```{r}
-data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
-#typeof(data$date[1])
-data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 7)
-data.ts <- ts(data$total.foreign.sim, frequency = 7)
-
 main <- "foreign sim per day"
 ylab<-"Tot of sim in that day"
 plot(data.xts,ylab=ylab,main=main)
@@ -128,11 +127,31 @@ A good idea is to differenciate before decomposing. With the multiplicative mode
 ```{r}
 differenced <- diff(data.ts)
 plot(differenced)
+```
 
+```{r}
+min(differenced)
+```
+
+```{r}
+max(differenced)
+```
+
+
+
+```{r}
 decomposed <- decompose(differenced,type = "multiplicative")
-plot(decomposed)
+```
 
-checkresiduals(decomposed$random)
+
+```{r}
+#plot(decomposed)
+```
+
+
+
+```{r}
+#checkresiduals(decomposed$random)
 
 Box.test(decomposed$random, lag=5, fitdf=0)
 Box.test(decomposed$random, lag=5, fitdf=0, type="Lj")
@@ -198,7 +217,6 @@ checkresiduals(fit)
 
 ```{r}
 autoplot(forecast(fit))
-
 ```
 
 
@@ -241,9 +259,9 @@ acf(na.omit(dec$random), lag.max = 30)
 trying with differentiation and a multiplicative model:
 
 ```{r}
-differenced %>% decompose(type="multiplicative") %>% autoplot()
-dec <- decompose(differenced,type="multiplicative")
-acf(na.omit(dec$random))
+#differenced %>% decompose(type="multiplicative") %>% autoplot()
+#dec <- decompose(differenced,type="multiplicative")
+#acf(na.omit(dec$random))
 ```
 
 Looks better than before but we can still see every 5(\*7) a seasonality/trend left. 5\*7 is about a month, probably there is a monthly seasonality
@@ -253,7 +271,7 @@ Looks better than before but we can still see every 5(\*7) a seasonality/trend l
 
 ```{r}
 require(forecast)
-msts_cons <- msts(as.data.frame(diff(data.ts)), seasonal.periods = c(7, 30, 4*30))
+msts_cons <- msts(as.data.frame(diff(data.ts)), seasonal.periods = c(7,365))
 msts_cons %>% mstl() %>% autoplot()
 decomposed <- mstl(msts_cons)
 ```
@@ -263,6 +281,102 @@ checkresiduals(remainder(decomposed))
 Box.test(remainder(decomposed), lag=5, fitdf=0)
 Box.test(remainder(decomposed), lag=5, fitdf=0, type="Lj")
 ```
+
+
+# Garch
+
+
+```{r}
+library(fGarch) # estimate GARCH and Forecast
+library(tseries) #used for time series data
+library(urca) #Used for checking Unit root Cointegration
+library(fUnitRoots) #Used for conducting unit root test
+library(forecast) #Used for forecasting ARIMA model
+```
+
+```{r}
+setwd("~/Documents/GitHub/STDA-project-proposal")
+set.seed(25061997)
+
+require(zoo)
+require(xts)
+data <- read.csv("opendatamilano2017.csv",sep = ";")
+data <- rbind(data, read.csv("opendatamilano2018.csv",sep = ";"))
+data <- rbind(data, read.csv("opendatamilano2019.csv",sep = ";"))
+
+data$prefix <- NULL
+data$country <- NULL
+data$num <- NULL
+data$total.ita.sim <- NULL
+
+ll <- aggregate.data.frame(data$total.foreign.sim,by=list(data$date),FUN=mean)
+names(ll)[2] <- "total.foreign.sim"
+names(ll)[1] <- "Date"
+data <- ll
+
+data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
+#typeof(data$date[1])
+data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 30)
+data.ts <- ts(data$total.foreign.sim, frequency = 30)
+```
+
+
+```{r}
+#Calculate inflation as difference of log of exchange rate and then multiplied by 100
+inflation_series<-(diff(log(data.ts)))*100 
+#Plot the inflation 
+plot.ts(inflation_series, main="Inflation of exchange rate")
+```
+
+```{r}
+summary(inflation_series)
+```
+
+```{r}
+#ACF and PACF Plots
+acf(inflation_series)
+pacf(inflation_series)
+```
+
+```{r}
+#Model fitting. We have selected the ARIMA(5,0,0) model
+Arima_5_0_0<- arima(inflation_series[1:499], order = c(5,0,0))
+#Check out the residuals 
+residual <- Arima_5_0_0$resid
+acf(residual) 
+pacf(residual)
+```
+
+```{r}
+#Perform the Ljung Box test
+Box.test(residual,c(20),"Ljung-Box")
+```
+
+
+```{r}
+#Fitting GARCH over the first 500 data points
+garch.fit <- garchFit(formula = ~arma(5,0)+garch(1,1), data = inflation_series[1:500])
+```
+
+```{r}
+#Plot the model
+plot(garch.fit, which='all')
+```
+
+
+# RUGARCH
+
+```{r}
+spec = ugarchspec()
+fit = ugarchfit(spec = spec, data = data.ts)
+show(fit)
+```
+
+
+```{r}
+plot(fit, which='all')
+```
+
 
 
 # Conclusions
