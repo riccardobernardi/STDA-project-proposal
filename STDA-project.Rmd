@@ -3,24 +3,33 @@ title: "Spatio-Temporal Data Analysis Project"
 date: "`r Sys.Date()`"
 output:
    pdf_document:
-      fig_caption: true
-      number_sections: true
+     fig_caption: true
+     number_sections: true
+fontsize: 12pt
 ---
 
 
 ![](./foscari.jpg)
 
-# Patterns in foreign sims connected to OpenWiFi-Milan
+# Patterns in foreign sims connected to OpenWiFi-Milan  {-}
 
 Author: Bernardi Riccardo - 864018
 
 \newpage
 \tableofcontents
 \newpage
-\listoffigures
-\newpage
-\listoftables
-\newpage
+<!-- \listoffigures -->
+<!-- \newpage -->
+<!-- \listoftables -->
+<!-- \newpage -->
+
+```{r include = FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+
+# Introduction & Motivation
 
 
 # Loading the Data
