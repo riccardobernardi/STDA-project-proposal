@@ -24,15 +24,28 @@ Author: Bernardi Riccardo - 864018
 <!-- \newpage -->
 
 ```{r include = FALSE}
-knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+knitr::opts_chunk$set(fig.width=10, fig.height=6, fig.path='Figs/',
                       echo=FALSE, warning=FALSE, message=FALSE)
 ```
 
 
 # Introduction & Motivation
 
+The dataset that I've chosen is about the presence of foreign smartphone's sims to the OpenWifi of the Municipality of Milan. This data is open and available on the website data.gov.it. The reasons why I would like to go further with this project is that I strongly believe that are present seasonalities that can be interesting to be analysed but also can be more interesting to relate the outliers to some events that happened in the past with a certain mediatic relevance. In practice I would like to both analyse trend and seasonalities to know in which months there are more foreign people and if the trend is increasing in time and both search for outlier peaks to be related to important happenings in the Milan city. Finally I would like to forecast the possible presences in the new year in the city of Milan.
 
-# Loading the Data
+
+# The Data
+
+The dataset comes from the open data provided by all the municipalities of Milan. This repository is available at dati.gov.it. From this repository I selected the data going from January of 2018 to October of the 2019.
+
+Characteristics of the DataSet:
+
+- the dataset contains 2 columns "Date, Number_of_Foreign_Sims"
+- has 658 rows
+- Dates goes from from 01/01/18 to 30/10/19 (~2 years)
+- the datasets have no NA
+- no lacking days
+- the "Number_of_Foreign_Sims" is a discrete variable about total number of foreign sims in a certain Date connected to the OpenWifi of Milan
 
 
 ```{r}
@@ -68,7 +81,7 @@ fivenum(data$total.foreign.sim)
 hist(data$total.foreign.sim)
 ```
 
-We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 01.01.2018 to 30.10.2019. Data is here sette
+We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 01.01.2018 to 30.10.2019. Data is here:
 
 ```{r}
 data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
@@ -124,6 +137,8 @@ checkresiduals(decomposed$random)
 Box.test(decomposed$random, lag=5, fitdf=0)
 Box.test(decomposed$random, lag=5, fitdf=0, type="Lj")
 ```
+
+# The additive model doesn't work for us
 
 With the additive model
 This model doesn't work at all
