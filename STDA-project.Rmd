@@ -93,6 +93,29 @@ ylab<-"Tot of sim in that day"
 plot(data.xts,ylab=ylab,main=main)
 ```
 
+
+# Peaks Explanation
+
+Many peaks are present we would like to exaplin them and to cut them out to be able to predict with a simple arima
+
+- automatic roaming [https://www.mobileworld.it/2017/08/07/roaming-gratis-europa-condizioni-fair-use-114077/]
+- fashion week [https://www.cameramoda.it/it/milano-moda-donna/] february
+- fashion week 2017 [https://www.milanoweekend.it/articoli/milano-fashion-week-2017-eventi-programma/] february
+
+```{r}
+a <- max(data$total.foreign.sim)
+data$Date[data$total.foreign.sim==a]
+```
+
+- arch week [https://www.lastampa.it/milano/2017/06/17/news/milano-smart-city-del-futuro-se-ne-parla-all-archweek-in-triennale-1.34584894?refresh_ce]
+- it was a saturday!!
+- it was the orient festival [https://www.wikieventi.it/milano/index.php?data_selezionata=2017-06-17]
+- many mucis events, samsara of papetee and others, folk's festivals, discounts [https://www.wikieventi.it/milano/index.php?data_selezionata=2017-07-22]
+
+# Outlier detection and removal
+
+Here is not ready, should be completed asap
+
 # Trend recognition
 
 ```{r}
@@ -367,6 +390,7 @@ plot(garch.fit, which='all')
 # RUGARCH
 
 ```{r}
+require(rugarch)
 spec = ugarchspec()
 fit = ugarchfit(spec = spec, data = data.ts)
 show(fit)
