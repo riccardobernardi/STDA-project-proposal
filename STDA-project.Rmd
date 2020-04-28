@@ -150,10 +150,10 @@ data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data
 ```
 
 
-# Using a box jenkins transform
+# Using a boxCox transform
 
 ```{r}
-here the code please!!!!!
+data$total.foreign.sim <- log(data$total.foreign.sim)
 ```
 
 
@@ -169,6 +169,11 @@ data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 30)
 data.ts <- ts(data$total.foreign.sim, frequency = 30)
 ```
 
+# Derivative of the data to reach the stationarity
+
+```{r}
+data.ts <- diff(data.ts)
+```
 
 We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 05.06.2017 to 30.10.2019. Data is here:
 
@@ -177,6 +182,13 @@ main <- "foreign sim per day"
 ylab<-"Tot of sim in that day"
 plot(data.xts,ylab=ylab,main=main)
 ```
+
+```{r}
+main <- "foreign sim per day"
+ylab<-"Tot of sim in that day"
+plot(data.ts,ylab=ylab,main=main)
+```
+
 
 # Peaks Explanation
 
@@ -195,10 +207,6 @@ data$Date[data$total.foreign.sim==a]
 - it was a saturday!!
 - it was the orient festival [https://www.wikieventi.it/milano/index.php?data_selezionata=2017-06-17]
 - many mucis events, samsara of papetee and others, folk's festivals, discounts [https://www.wikieventi.it/milano/index.php?data_selezionata=2017-07-22]
-
-# Outlier detection and removal
-
-Here is not ready, should be completed asap
 
 # Trend recognition
 
@@ -227,34 +235,15 @@ detrended.lin <- data.ts - ma(data.ts, order = 7, centre = T)
 plot(detrended.lin)
 ```
 
-# Removing seasonality
-
-A good idea is to differenciate before decomposing. With the multiplicative model
 
 ```{r}
-differenced <- diff(data.ts)
-plot(differenced)
-```
-
-```{r}
-min(differenced)
-```
-
-```{r}
-max(differenced)
-```
-
-
-
-```{r}
-decomposed <- decompose(differenced,type = "multiplicative")
+decomposed <- decompose(data.ts,type = "multiplicative")
 ```
 
 
 ```{r}
-#plot(decomposed)
+plot(decomposed)
 ```
-
 
 
 ```{r}
@@ -270,7 +259,7 @@ With the additive model
 This model doesn't work at all
 
 ```{r}
-differenced <- diff(data.ts)
+differenced <- data.ts
 plot(differenced)
 
 decomposed <- decompose(differenced,type = "additive")
@@ -282,45 +271,19 @@ Box.test(decomposed$random, lag=5, fitdf=0)
 Box.test(decomposed$random, lag=5, fitdf=0, type="Lj")
 ```
 
-Without the first differentiation the result will have been much worse:
-
-```{r}
-not.differenced <- data.ts
-plot(not.differenced)
-
-decomposed <- decompose(not.differenced,type = "multiplicative")
-plot(decomposed)
-
-checkresiduals(decomposed$random)
-
-Box.test(decomposed$random, lag=5, fitdf=0)
-Box.test(decomposed$random, lag=5, fitdf=0, type="Lj")
-```
-
-Every 7 lags the peak recurs
-
-# Check Residuals
-
-```{r}
-acf(na.omit(decomposed$random), main = "Standardized Residuals", 36)
-```
-
-
-```{r}
-pacf(na.omit(decomposed$random), main = "Standardized Residuals", 36)
-```
-
 # Arima
 
 ```{r}
 require(fpp)
-fit <- Arima(differenced, order=c(3,1,3))
+fit <- Arima(data.ts, order=c(3,1,3))
 summary(fit)
 ```
 
 ```{r}
 checkresiduals(fit)
 ```
+
+Every 7 bins a peak occurs
 
 ```{r}
 autoplot(forecast(fit))
@@ -329,15 +292,13 @@ autoplot(forecast(fit))
 
 # Auto Arima
 
-
 ```{r}
-require(fpp)
-auto.arima(data.ts,stepwise=TRUE,trace=TRUE,ic = "bic")
-aa <- Arima(order = c(3,1,1), seasonal = c(2,0,0), y = data.ts)
+fit <- auto.arima(data.ts,stepwise=TRUE,trace=TRUE,ic = "bic")
 ```
 
+
 ```{r}
-plot(forecast(aa,data.ts))
+plot(forecast(fit))
 ```
 
 The plot is not good but AIC and BIC are very high, we should try with a multi seasonal decomposition
@@ -363,14 +324,6 @@ dec <- decompose(data.ts)
 acf(na.omit(dec$random), lag.max = 30)
 ```
 
-trying with differentiation and a multiplicative model:
-
-```{r}
-#differenced %>% decompose(type="multiplicative") %>% autoplot()
-#dec <- decompose(differenced,type="multiplicative")
-#acf(na.omit(dec$random))
-```
-
 Looks better than before but we can still see every 5(\*7) a seasonality/trend left. 5\*7 is about a month, probably there is a monthly seasonality
 
 # Transforming into msts
@@ -378,7 +331,7 @@ Looks better than before but we can still see every 5(\*7) a seasonality/trend l
 
 ```{r}
 require(forecast)
-msts_cons <- msts(as.data.frame(diff(data.ts)), seasonal.periods = c(7,365))
+msts_cons <- msts(as.data.frame(diff(data.ts)), seasonal.periods = c(7,30,365))
 msts_cons %>% mstl() %>% autoplot()
 decomposed <- mstl(msts_cons)
 ```
@@ -401,36 +354,10 @@ library(fUnitRoots) #Used for conducting unit root test
 library(forecast) #Used for forecasting ARIMA model
 ```
 
-```{r}
-setwd("~/Documents/GitHub/STDA-project-proposal")
-set.seed(25061997)
-
-require(zoo)
-require(xts)
-data <- read.csv("opendatamilano2017.csv",sep = ";")
-data <- rbind(data, read.csv("opendatamilano2018.csv",sep = ";"))
-data <- rbind(data, read.csv("opendatamilano2019.csv",sep = ";"))
-
-data$prefix <- NULL
-data$country <- NULL
-data$num <- NULL
-data$total.ita.sim <- NULL
-
-ll <- aggregate.data.frame(data$total.foreign.sim,by=list(data$date),FUN=mean)
-names(ll)[2] <- "total.foreign.sim"
-names(ll)[1] <- "Date"
-data <- ll
-
-data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
-#typeof(data$date[1])
-data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 30)
-data.ts <- ts(data$total.foreign.sim, frequency = 30)
-```
-
 
 ```{r}
 #Calculate inflation as difference of log of exchange rate and then multiplied by 100
-inflation_series<-(diff(log(data.ts)))*100 
+inflation_series<-data.ts*100 
 #Plot the inflation 
 plot.ts(inflation_series, main="Inflation of exchange rate")
 ```
