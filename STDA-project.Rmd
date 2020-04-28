@@ -80,7 +80,6 @@ fivenum(data$total.foreign.sim)
 hist(data$total.foreign.sim)
 ```
 
-We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 01.01.2018 to 30.10.2019. Data is here:
 
 # Preprocessing
 
