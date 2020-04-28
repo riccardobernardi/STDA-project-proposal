@@ -67,11 +67,6 @@ ll <- aggregate.data.frame(data$total.foreign.sim,by=list(data$date),FUN=mean)
 names(ll)[2] <- "total.foreign.sim"
 names(ll)[1] <- "Date"
 data <- ll
-
-data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
-#typeof(data$date[1])
-data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 30)
-data.ts <- ts(data$total.foreign.sim, frequency = 30)
 ```
 
 # Exploration of the Data
@@ -87,12 +82,102 @@ hist(data$total.foreign.sim)
 
 We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 01.01.2018 to 30.10.2019. Data is here:
 
+# Preprocessing
+
+Checking Nans
+
+```{r}
+sum(is.na(data$Date))
+sum(is.na(data$total.foreign.sim))
+```
+
+Checking limit values
+
+```{r}
+min(data$total.foreign.sim)
+max(data$total.foreign.sim)
+```
+
+```{r}
+mean(data$total.foreign.sim)
+mean.data <- mean(data$total.foreign.sim)
+```
+
+```{r}
+sd(data$total.foreign.sim)
+sd.data <- sd(data$total.foreign.sim)
+```
+
+Elements that are good in our ts stand between mean$\pm$std
+
+```{r}
+up.m.sd <- mean.data + sd.data
+lo.m.sd <- mean.data - sd.data
+
+up.m.sd
+lo.m.sd
+```
+
+
+boxplot to check outliers
+
+
+```{r}
+boxplot(data$total.foreign.sim)
+```
+
+```{r}
+qs <- quantile(data$total.foreign.sim)
+qs
+iqr <- IQR(data$total.foreign.sim)
+low.outlier <- qs[2] - (1.5 * iqr)
+hi.outlier <- qs[4] + (1.5 * iqr)
+
+low.outlier
+hi.outlier
+```
+
+```{r}
+data$total.foreign.sim[data$total.foreign.sim<low.outlier] = mean.data
+data$total.foreign.sim[data$total.foreign.sim>hi.outlier] = mean.data
+```
+
+Checking last elements of the serie
+
+```{r}
+last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data$total.foreign.sim), by=1)]
+last5[last5<lo.m.sd] <- mean.data
+data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data$total.foreign.sim), by=1)] <- last5
+```
+
+
+# Using a box jenkins transform
+
+```{r}
+here the code please!!!!!
+```
+
+
+# Time serie is built
+
+Here the time serie is built
+
+```{r}
+require(xts)
+data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
+#typeof(data$date[1])
+data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 30)
+data.ts <- ts(data$total.foreign.sim, frequency = 30)
+```
+
+
+We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 05.06.2017 to 30.10.2019. Data is here:
+
 ```{r}
 main <- "foreign sim per day"
 ylab<-"Tot of sim in that day"
 plot(data.xts,ylab=ylab,main=main)
 ```
-
 
 # Peaks Explanation
 
