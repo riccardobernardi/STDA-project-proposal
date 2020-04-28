@@ -26,6 +26,8 @@ Author: Bernardi Riccardo - 864018
 ```{r include = FALSE}
 knitr::opts_chunk$set(fig.width=10, fig.height=6, fig.path='Figs/',
                       echo=FALSE, warning=FALSE, message=FALSE)
+
+rm(list=ls())
 ```
 
 
@@ -153,9 +155,20 @@ data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data
 # Using a boxCox transform
 
 ```{r}
-data$total.foreign.sim <- log(data$total.foreign.sim)
+# data$total.foreign.sim <- log(data$total.foreign.sim)
 ```
 
+# Hist after the transformation
+
+```{r}
+hist(data$total.foreign.sim)
+```
+
+# Boxplot after the transformation
+
+```{r}
+boxplot(data$total.foreign.sim)
+```
 
 # Time serie is built
 
@@ -237,20 +250,20 @@ plot(detrended.lin)
 
 
 ```{r}
-decomposed <- decompose(data.ts,type = "multiplicative")
+#decomposed <- decompose(data.ts,type = "multiplicative")
 ```
 
 
 ```{r}
-plot(decomposed)
+#plot(na.omit(decomposed))
 ```
 
 
 ```{r}
 #checkresiduals(decomposed$random)
 
-Box.test(decomposed$random, lag=5, fitdf=0)
-Box.test(decomposed$random, lag=5, fitdf=0, type="Lj")
+#Box.test(decomposed$random, lag=5, fitdf=0)
+#Box.test(decomposed$random, lag=5, fitdf=0, type="Lj")
 ```
 
 # The additive model doesn't work for us
