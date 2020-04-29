@@ -178,14 +178,14 @@ Here the time serie is built
 require(xts)
 data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
 #typeof(data$date[1])
-data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 30)
-data.ts <- ts(data$total.foreign.sim, frequency = 30)
-```
+data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 365)
+data.ts <- ts(data$total.foreign.sim, frequency = 365)
 
-# Derivative of the data to reach the stationarity
+require(TSstudio)
+split <- ts_split(ts.obj = data.ts, sample.out = 100)
 
-```{r}
-data.ts <- diff(data.ts)
+data.ts <- split$train
+testing <- split$test
 ```
 
 We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 05.06.2017 to 30.10.2019. Data is here:
@@ -196,12 +196,20 @@ ylab<-"Tot of sim in that day"
 plot(data.xts,ylab=ylab,main=main)
 ```
 
+
+
 ```{r}
 main <- "foreign sim per day"
 ylab<-"Tot of sim in that day"
 plot(data.ts,ylab=ylab,main=main)
 ```
 
+
+# Month by month plot
+
+```{r}
+boxplot(data.ts~cycle(data.ts))
+```
 
 # Peaks Explanation
 
@@ -236,18 +244,21 @@ legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red"
 ```
 
 
-
-
-
 ## Detrending using LM
 
 ```{r}
 require(fpp)
-detrended.lin <- data.ts - ma(data.ts, order = 7, centre = T)
-#detrended.lin <- data.ts - predict(fit4)
+detrended.lin <- data.ts - ma(data.ts, order = 3, centre = T)
+# detrended.lin <- data.ts - predict(fit4)
 plot(detrended.lin)
 ```
 
+# Derivative of the data to reach the stationarity
+
+```{r}
+data.ts.diff <- diff(detrended.lin)
+plot(data.ts.diff)
+```
 
 ```{r}
 #decomposed <- decompose(data.ts,type = "multiplicative")
@@ -272,34 +283,31 @@ With the additive model
 This model doesn't work at all
 
 ```{r}
-differenced <- data.ts
-plot(differenced)
+#decomposed <- decompose(data.ts.diff,type = "additive")
+#plot(decomposed)
 
-decomposed <- decompose(differenced,type = "additive")
-plot(decomposed)
+#checkresiduals(decomposed$random)
 
-checkresiduals(decomposed$random)
-
-Box.test(decomposed$random, lag=5, fitdf=0)
-Box.test(decomposed$random, lag=5, fitdf=0, type="Lj")
+#Box.test(decomposed$random, lag=5, fitdf=0)
+#Box.test(decomposed$random, lag=5, fitdf=0, type="Lj")
 ```
 
 # Arima
 
 ```{r}
-require(fpp)
-fit <- Arima(data.ts, order=c(3,1,3))
-summary(fit)
+#require(fpp)
+#fit <- Arima(data.ts, order=c(3,1,3))
+#summary(fit)
 ```
 
 ```{r}
-checkresiduals(fit)
+# checkresiduals(fit)
 ```
 
 Every 7 bins a peak occurs
 
 ```{r}
-autoplot(forecast(fit))
+# autoplot(forecast(fit))
 ```
 
 
@@ -314,6 +322,14 @@ fit <- auto.arima(data.ts,stepwise=TRUE,trace=TRUE,ic = "bic")
 plot(forecast(fit))
 ```
 
+```{r}
+#training <- subset(auscafe, end=length(auscafe)-61)
+#test <- subset(auscafe, start=length(auscafe)-60)
+#cafe.train <- Arima(training, order=c(2,1,1),seasonal=c(0,1,2), lambda=0)
+data.ts %>% forecast(h=12) %>% autoplot() + autolayer(testing)
+```
+
+
 The plot is not good but AIC and BIC are very high, we should try with a multi seasonal decomposition
 
 ```{r}
@@ -326,15 +342,15 @@ frequency(data.ts)
 without differentiation residuals looks pretty bad
 
 ```{r}
-library(lubridate)
-library(dplyr)
-library(forecast)
-library(ggplot2)
-library(scales)
+#library(lubridate)
+#library(dplyr)
+#library(forecast)
+#library(ggplot2)
+#library(scales)
 
-data.ts %>% decompose(type="multiplicative") %>% autoplot()
-dec <- decompose(data.ts)
-acf(na.omit(dec$random), lag.max = 30)
+#data.ts %>% decompose(type="multiplicative") %>% autoplot()
+#dec <- decompose(data.ts)
+#acf(na.omit(dec$random), lag.max = 30)
 ```
 
 Looks better than before but we can still see every 5(\*7) a seasonality/trend left. 5\*7 is about a month, probably there is a monthly seasonality
@@ -343,16 +359,16 @@ Looks better than before but we can still see every 5(\*7) a seasonality/trend l
 
 
 ```{r}
-require(forecast)
-msts_cons <- msts(as.data.frame(diff(data.ts)), seasonal.periods = c(7,30,365))
-msts_cons %>% mstl() %>% autoplot()
-decomposed <- mstl(msts_cons)
+#require(forecast)
+#msts_cons <- msts(as.data.frame(diff(data.ts)), seasonal.periods = c(7,30,365))
+#msts_cons %>% mstl() %>% autoplot()
+#decomposed <- mstl(msts_cons)
 ```
 
 ```{r}
-checkresiduals(remainder(decomposed))
-Box.test(remainder(decomposed), lag=5, fitdf=0)
-Box.test(remainder(decomposed), lag=5, fitdf=0, type="Lj")
+#checkresiduals(remainder(decomposed))
+#Box.test(remainder(decomposed), lag=5, fitdf=0)
+#Box.test(remainder(decomposed), lag=5, fitdf=0, type="Lj")
 ```
 
 
@@ -360,61 +376,61 @@ Box.test(remainder(decomposed), lag=5, fitdf=0, type="Lj")
 
 
 ```{r}
-library(fGarch) # estimate GARCH and Forecast
-library(tseries) #used for time series data
-library(urca) #Used for checking Unit root Cointegration
-library(fUnitRoots) #Used for conducting unit root test
-library(forecast) #Used for forecasting ARIMA model
+#library(fGarch) # estimate GARCH and Forecast
+#library(tseries) #used for time series data
+#library(urca) #Used for checking Unit root Cointegration
+#library(fUnitRoots) #Used for conducting unit root test
+#library(forecast) #Used for forecasting ARIMA model
 ```
 
 
 ```{r}
 #Calculate inflation as difference of log of exchange rate and then multiplied by 100
-inflation_series<-data.ts*100 
+#inflation_series<-data.ts*100 
 #Plot the inflation 
-plot.ts(inflation_series, main="Inflation of exchange rate")
+#plot.ts(inflation_series, main="Inflation of exchange rate")
 ```
 
 ```{r}
-summary(inflation_series)
+#summary(inflation_series)
 ```
 
 ```{r}
 #ACF and PACF Plots
-acf(inflation_series)
-pacf(inflation_series)
+#acf(inflation_series)
+#pacf(inflation_series)
 ```
 
 ```{r}
 #Model fitting. We have selected the ARIMA(5,0,0) model
-Arima_5_0_0<- arima(inflation_series[1:499], order = c(5,0,0))
+#Arima_5_0_0<- arima(inflation_series[1:499], order = c(5,0,0))
 #Check out the residuals 
-residual <- Arima_5_0_0$resid
-acf(residual) 
-pacf(residual)
+#residual <- Arima_5_0_0$resid
+#acf(residual) 
+#pacf(residual)
 ```
 
 ```{r}
 #Perform the Ljung Box test
-Box.test(residual,c(20),"Ljung-Box")
+#Box.test(residual,c(20),"Ljung-Box")
 ```
 
 
 ```{r}
 #Fitting GARCH over the first 500 data points
-garch.fit <- garchFit(formula = ~arma(5,0)+garch(1,1), data = inflation_series[1:500])
+#garch.fit <- garchFit(formula = ~arma(5,0)+garch(1,1), data = inflation_series[1:500])
 ```
 
 ```{r}
 #Plot the model
-plot(garch.fit, which='all')
+#plot(garch.fit, which='all')
 ```
 
 
 # RUGARCH
 
 ```{r}
-require(rugarch)
+#require(rugarch)
 spec = ugarchspec()
 fit = ugarchfit(spec = spec, data = data.ts)
 show(fit)
