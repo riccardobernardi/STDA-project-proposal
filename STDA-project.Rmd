@@ -238,14 +238,29 @@ lines(tt,predict(fit4),col='blue',lwd=2)
 legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red","blue"))
 ```
 
+# Smoothing
 
-## Detrending using LM
+```{r}
+require(fpp)
+require(forecast)
+trendpattern = timeSeries::filter(data.ts, filter = rep(1/15,15), sides=2)
+plot(data.ts, main = "moving average annual trend")
+lines(trendpattern,col="red")
+```
+
+```{r}
+seasonality <- data.ts - trendpattern
+plot(seasonality)
+```
+
+
+# Detrending using LM
 
 ```{r}
 require(fpp)
 #data.ts <- data.ts - ma(data.ts, order = 3, centre = T)
-data.ts <- data.ts - predict(fit4)
-plot(data.ts)
+#data.ts <- data.ts - predict(fit4)
+#plot(data.ts)
 ```
 
 # Derivative to avoid stationarity
@@ -259,12 +274,11 @@ plot(data.ts)
 # Checking stationarity before entering arima
 
 ```{r}
-lb <- Box.test(residuals(fit), lag = 24, type = "Ljung-Box")
-lb
-bp <- Box.test(residuals(fit), lag = 24, type = "Box-Pierce")
-bp
+# lb <- Box.test(residuals(fit), lag = 24, type = "Ljung-Box")
+# lb
+# bp <- Box.test(residuals(fit), lag = 24, type = "Box-Pierce")
+# bp
 ```
-
 
 # Splitting
 
