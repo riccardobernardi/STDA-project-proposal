@@ -242,10 +242,10 @@ legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red"
 ## Detrending using LM
 
 ```{r}
-# require(fpp)
-# detrended.lin <- data.ts - ma(data.ts, order = 3, centre = T)
-# detrended.lin <- data.ts - predict(fit4)
-# plot(detrended.lin)
+require(fpp)
+#data.ts <- data.ts - ma(data.ts, order = 3, centre = T)
+data.ts <- data.ts - predict(fit4)
+plot(data.ts)
 ```
 
 # Derivative to avoid stationarity
@@ -255,6 +255,16 @@ legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red"
 #plot(data.ts.diff)
 #data.ts <- data.ts.diff
 ```
+
+# Checking stationarity before entering arima
+
+```{r}
+lb <- Box.test(residuals(fit), lag = 24, type = "Ljung-Box")
+lb
+bp <- Box.test(residuals(fit), lag = 24, type = "Box-Pierce")
+bp
+```
+
 
 # Splitting
 
