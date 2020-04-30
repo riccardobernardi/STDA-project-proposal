@@ -374,15 +374,15 @@ frequency(data.ts)
 without differentiation residuals looks pretty bad
 
 ```{r}
-library(lubridate)
-library(dplyr)
-library(forecast)
-library(ggplot2)
-library(scales)
-
-data.ts %>% decompose(type="multiplicative") %>% autoplot()
-dec <- decompose(data.ts)
-acf(na.omit(dec$random), lag.max = 30)
+# library(lubridate)
+# library(dplyr)
+# library(forecast)
+# library(ggplot2)
+# library(scales)
+# 
+# data.ts %>% decompose(type="multiplicative") %>% autoplot()
+# dec <- decompose(data.ts)
+# acf(na.omit(dec$random), lag.max = 30)
 ```
 
 Looks better than before but we can still see every 5(\*7) a seasonality/trend left. 5\*7 is about a month, probably there is a monthly seasonality
@@ -390,15 +390,15 @@ Looks better than before but we can still see every 5(\*7) a seasonality/trend l
 # RUGARCH
 
 ```{r}
-require(rugarch)
-spec = ugarchspec()
-fit = ugarchfit(spec = spec, data = data.ts)
-show(fit)
+# require(rugarch)
+# spec = ugarchspec()
+# fit = ugarchfit(spec = spec, data = data.ts)
+# show(fit)
 ```
 
 
 ```{r}
-plot(fit, which='all')
+# plot(fit, which='all')
 ```
 
 
