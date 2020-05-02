@@ -14,6 +14,8 @@ fontsize: 12pt
 # Patterns in foreign sims connected to OpenWiFi-Milan  {-}
 
 Author: Bernardi Riccardo - 864018
+Professor: Isadora Antoniano-Villalobos
+Course: Spatio-Temporal Data Analysis
 
 \newpage
 \tableofcontents
@@ -24,27 +26,32 @@ Author: Bernardi Riccardo - 864018
 <!-- \newpage -->
 
 ```{r include = FALSE}
-knitr::opts_chunk$set(fig.width=10, fig.height=6, fig.path='Figs/',
+knitr::opts_chunk$set(fig.width=10, fig.height=5, fig.path='Figs/',
                       echo=FALSE, warning=FALSE, message=FALSE)
 
 rm(list=ls())
 ```
 
+# Statement of the Problem
+
+The project is assigned to every student with a different topic. the topic have to be different between students and should be original to achieve a better score. Students can work in couple and this obviously involves a proportional workload, "more people, more work to be done". The project should include the analysis of spatial data or temporal data, also both together is possible but the complexity involved is very high. The project should include an introduction, a description of the data, motivation of the choice, a detailed analysis with all the possible tools(interesting tools should be explained and can improve the overall mark).
+
+I Worked by my own, the whole code and report is developed only by me. The code is not plotted on the resulting pdf but is available on the source. I used best practices to write good code such as KISS(keeping the code very very simple) and commenting the code. I used a lot of libraries preferring guaranteed code instead writing unrealiable code. I tried to use realiable libraries since R packages can be developed by all the people and can contain errors. I choosed a very very original problem, this can be checked by simply inputting the name of this project on the internet, no previous works were done until the time i'm writing(or at least they do not appear to me on t hegoogle page).
 
 # Introduction & Motivation
 
 The dataset that I've chosen is about the presence of foreign smartphone's sims to the OpenWifi of the Municipality of Milan. This data is open and available on the website data.gov.it. The reasons why I would like to go further with this project is that I strongly believe that are present seasonalities that can be interesting to be analysed but also can be more interesting to relate the outliers to some events that happened in the past with a certain mediatic relevance. In practice I would like to both analyse trend and seasonalities to know in which months there are more foreign people and if the trend is increasing in time and both search for outlier peaks to be related to important happenings in the Milan city. Finally I would like to forecast the possible presences in the new year in the city of Milan.
 
 
-# The Data
+# Data Description
 
-The dataset comes from the open data provided by all the municipalities of Milan. This repository is available at dati.gov.it. From this repository I selected the data going from January of 2018 to October of the 2019.
+The dataset comes from the open data provided by all the municipalities of Milan. This repository is available at dati.gov.it. From this repository I selected the data going from June of 2017 to October of the 2019.
 
 Characteristics of the DataSet:
 
 - the dataset contains 2 columns "Date, Number_of_Foreign_Sims"
-- has 658 rows
-- Dates goes from from 01/01/18 to 30/10/19 (~2 years)
+- has 868 rows
+- Dates goes from from 05/06/17 to 30/10/19 (~2 years)
 - the datasets have no NA
 - no lacking days
 - the "Number_of_Foreign_Sims" is a discrete variable about total number of foreign sims in a certain Date connected to the OpenWifi of Milan
@@ -83,7 +90,7 @@ hist(data$total.foreign.sim)
 ```
 
 
-# Preprocessing
+## Preprocessing
 
 Checking Nans
 
@@ -152,20 +159,20 @@ data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data
 ```
 
 
-# Using a boxCox transform
+## Using a boxCox transform
 
 ```{r}
 #data$total.foreign.sim <- log(data$total.foreign.sim)
 data$total.foreign.sim <- sqrt(data$total.foreign.sim)
 ```
 
-# Hist after the transformation
+## Hist after the transformation
 
 ```{r}
 hist(data$total.foreign.sim)
 ```
 
-# Boxplot after the transformation
+## Boxplot after the transformation
 
 ```{r}
 boxplot(data$total.foreign.sim)
@@ -180,7 +187,7 @@ require(xts)
 data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
 #typeof(data$date[1])
 data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 7)
-data.ts <- ts(data$total.foreign.sim, frequency = 30)
+data.ts <- ts(data$total.foreign.sim, frequency = 7)
 ```
 
 We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 05.06.2017 to 30.10.2019. Data is here:
@@ -194,13 +201,13 @@ plot(data.xts,ylab=ylab,main=main)
 
 
 ```{r}
-main <- "foreign sim per day"
-ylab<-"Tot of sim in that day"
-plot(data.ts,ylab=ylab,main=main)
+#main <- "foreign sim per day"
+#ylab<-"Tot of sim in that day"
+#plot(data.ts,ylab=ylab,main=main)
 ```
 
 
-# Month by month plot
+## Week by Week plot
 
 ```{r}
 boxplot(data.ts~cycle(data.ts))
@@ -238,7 +245,7 @@ lines(tt,predict(fit4),col='blue',lwd=2)
 legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red","blue"))
 ```
 
-# Smoothing
+## Smoothing
 
 ```{r}
 require(fpp)
@@ -253,34 +260,7 @@ seasonality <- data.ts - trendpattern
 plot(seasonality)
 ```
 
-
-# Detrending using LM
-
-```{r}
-require(fpp)
-#data.ts <- data.ts - ma(data.ts, order = 3, centre = T)
-#data.ts <- data.ts - predict(fit4)
-#plot(data.ts)
-```
-
-# Derivative to avoid stationarity
-
-```{r}
-#data.ts.diff <- diff(detrended.lin)
-#plot(data.ts.diff)
-#data.ts <- data.ts.diff
-```
-
-# Checking stationarity before entering arima
-
-```{r}
-# lb <- Box.test(residuals(fit), lag = 24, type = "Ljung-Box")
-# lb
-# bp <- Box.test(residuals(fit), lag = 24, type = "Box-Pierce")
-# bp
-```
-
-# Splitting
+## Splitting
 
 ```{r}
 require(TSstudio)
@@ -290,7 +270,21 @@ data.ts <- split$train
 testing <- split$test
 ```
 
-# Auto Arima
+# Models
+
+We tried many models, the most known is the arma but we tried:
+- arma
+- arima
+- sarima
+- var
+- rugarch
+- fgarch
+
+and others, i'm reporting here only the best one and some ideas for the worst performing ones.
+
+## Arima
+
+To find the best arima in a such complicate time serie we are going to exploit a grid search algorithm done via the auto arima function provided by the fpp package
 
 ```{r}
 require(fpp)
@@ -298,10 +292,13 @@ require(forecast)
 fit <- auto.arima(data.ts,stepwise=TRUE,trace=TRUE,ic = "bic", approximation = FALSE)
 ```
 
+A forecast on the training set looks like this one below:
 
 ```{r}
 plot(forecast(fit))
 ```
+
+Here we are going to plot a forecast on a part of the data that was never seen by the arima model, the plots looks not so bad.
 
 ```{r}
 #training <- subset(auscafe, end=length(auscafe)-61)
@@ -310,12 +307,14 @@ plot(forecast(fit))
 data.ts %>% forecast(h=100) %>% autoplot() + autolayer(testing)
 ```
 
+The accuracy on the test set is only two percentages points lower than on the training set. We are using 100 points.
 
 ```{r}
 pred <- forecast(fit, h=100)
 accuracy(pred, testing)
 ```
 
+Actually here below we can see that residuals are not pretty good but after many weeks of attempts with many models, all the poossible seasonalities, all the decomposition, all the tricks available i'm pretty sure that this is the best trade-off between complexity of the models used, accuracy and processing of the dataset.
 
 ```{r}
 tsdisplay(residuals(fit))
@@ -330,6 +329,8 @@ lb
 bp <- Box.test(residuals(fit), lag = 24, type = "Box-Pierce")
 bp
 ```
+
+The diagnostic here below confirms at least that the auto arima chose the right differentiation parameter.
 
 ```{r}
 ########################################################
@@ -369,9 +370,9 @@ The plot is not good but AIC and BIC are very high, we should try with a multi s
 frequency(data.ts)
 ```
 
-# Searching for multi seasonalities
+## Searching for multi seasonalities
 
-without differentiation residuals looks pretty bad
+We searched for all the possible multi seasonalities using the msts package but at the end adding many seasonalities did not helped in finding better residuals or clearer trends and seasonalities. Adding more and more just created a complicated useless model that scored the same as the base one.
 
 ```{r}
 # library(lubridate)
@@ -385,9 +386,9 @@ without differentiation residuals looks pretty bad
 # acf(na.omit(dec$random), lag.max = 30)
 ```
 
-Looks better than before but we can still see every 5(\*7) a seasonality/trend left. 5\*7 is about a month, probably there is a monthly seasonality
+## RUGARCH
 
-# RUGARCH
+We tried this model but it was not useful for great predictions, residuals were much more scattered than arima.
 
 ```{r}
 # require(rugarch)
@@ -408,14 +409,3 @@ Looks better than before but we can still see every 5(\*7) a seasonality/trend l
 
 It was a hard work! I tried a lot of methods to fit the data and obtain good forecasting and good residuals. I tried searching for multi seasonalities, difference some times to reach stationarity, detrending with lm and ma, smoothing. I tried by hand many arima models. I tried to decompose the time serie in many ways. I tried all the possible frequencies that can be thought as valid. Eventually it was really interesting! I experimented a lot. The dataset is brand new, never touched by other data scientists for what i know.
 
-
-# TODO
-
-prima diff, poi prima diff seasonal, check acf pacf, check no trend(trend se con decadono a 0 velocemente)
-identificare i picchi
-identificare l estate
-doppia seasonality una settimanale e una annuale
-ARCH
-GARCH
-VAR<----
-stabilizzare con trasformazioni
