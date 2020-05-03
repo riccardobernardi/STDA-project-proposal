@@ -14,8 +14,8 @@ fontsize: 12pt
 # Patterns in foreign sims connected to OpenWiFi-Milan  {-}
 
 Author: Bernardi Riccardo - 864018
+
 Professor: Isadora Antoniano-Villalobos
-Course: Spatio-Temporal Data Analysis
 
 \newpage
 \tableofcontents
@@ -158,9 +158,6 @@ last5[last5<lo.m.sd] <- mean.data
 data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data$total.foreign.sim), by=1)] <- last5
 ```
 
-
-## Using a boxCox transform
-
 ```{r}
 #data$total.foreign.sim <- log(data$total.foreign.sim)
 data$total.foreign.sim <- sqrt(data$total.foreign.sim)
@@ -209,6 +206,8 @@ plot(data.xts,ylab=ylab,main=main)
 
 ## Week by Week plot
 
+As we can see the greatest number of foreign come after the mid of the week
+
 ```{r}
 boxplot(data.ts~cycle(data.ts))
 ```
@@ -223,7 +222,7 @@ Many peaks are present we would like to exaplin them and to cut them out to be a
 
 ```{r}
 a <- max(data$total.foreign.sim)
-data$Date[data$total.foreign.sim==a]
+b <- data$Date[data$total.foreign.sim==a]
 ```
 
 - arch week [https://www.lastampa.it/milano/2017/06/17/news/milano-smart-city-del-futuro-se-ne-parla-all-archweek-in-triennale-1.34584894?refresh_ce]
@@ -407,5 +406,7 @@ We tried this model but it was not useful for great predictions, residuals were 
 # Conclusions
 
 
-It was a hard work! I tried a lot of methods to fit the data and obtain good forecasting and good residuals. I tried searching for multi seasonalities, difference some times to reach stationarity, detrending with lm and ma, smoothing. I tried by hand many arima models. I tried to decompose the time serie in many ways. I tried all the possible frequencies that can be thought as valid. Eventually it was really interesting! I experimented a lot. The dataset is brand new, never touched by other data scientists for what i know.
+It was a hard work! Iwas really interesting! I tried a lot of methods to fit the data and obtain good forecasting and good residuals. I tried searching for multi seasonalities, difference some times to reach stationarity, detrending with lm and ma, smoothing. I tried by hand many arima models. I tried to decompose the time serie in many ways. I tried all the possible frequencies that can be thought as valid. Eventually it was really interesting! I experimented a lot.
+
+The lesson I learned from this dataset is that the most foreign come after the mid of the week and the peak of foreign is unexpectedly on Friday and secondarily on Saturday. The number of outliers is very high due to programmed events that break the seasonality of the time serie. The number of foreign connected to the openwifi surely can be a good proxy for the overall number of foreign in milan since the antennas are in the central part of the city. In the days after the break down of the roaming policy the number of foreign surely increased but we cannot prove this fact since the data we have is not enough.
 
