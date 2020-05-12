@@ -32,18 +32,22 @@ knitr::opts_chunk$set(fig.width=10, fig.height=5, fig.path='Figs/',
 rm(list=ls())
 ```
 
-# Statement of the Problem
-
-The project is assigned to every student with a different topic. the topic have to be different between students and should be original to achieve a better score. Students can work in couple and this obviously involves a proportional workload, "more people, more work to be done". The project should include the analysis of spatial data or temporal data, also both together is possible but the complexity involved is very high. The project should include an introduction, a description of the data, motivation of the choice, a detailed analysis with all the possible tools(interesting tools should be explained and can improve the overall mark).
-
-I Worked by my own, the whole code and report is developed only by me. The code is not plotted on the resulting pdf but is available on the source. I used best practices to write good code such as KISS(keeping the code very very simple) and commenting the code. I used a lot of libraries preferring guaranteed code instead writing unrealiable code. I tried to use realiable libraries since R packages can be developed by all the people and can contain errors. I choosed a very very original problem, this can be checked by simply inputting the name of this project on the internet, no previous works were done until the time i'm writing(or at least they do not appear to me on t hegoogle page).
+![](./bannerOpenWifi_SCALA_Mirror.png)
 
 # Introduction & Motivation
 
-The dataset that I've chosen is about the presence of foreign smartphone's sims to the OpenWifi of the Municipality of Milan. This data is open and available on the website data.gov.it. The reasons why I would like to go further with this project is that I strongly believe that are present seasonalities that can be interesting to be analysed but also can be more interesting to relate the outliers to some events that happened in the past with a certain mediatic relevance. In practice I would like to both analyse trend and seasonalities to know in which months there are more foreign people and if the trend is increasing in time and both search for outlier peaks to be related to important happenings in the Milan city. Finally I would like to forecast the possible presences in the new year in the city of Milan.
+The project is about finding if some patterns are present in the way foreign people connects to the wifi of the city of Milan in Italy. This wifi was installed in the first days of august of the 2014 but the data if from the $5^{th}$ of July od the 2015. It was installed by the municipality of the city and it is public but it is only available in some areas of the city. We can see here below that the areas covered are the most attractive from the point of view of a tourist so for this reason we can believe that this is a good proxy for the number of people in the city.
+
+![](./mappa open wifi milano-2-2.jpg)
+
+It permits to a user that is logged in to use the free wifi for a maximum time of 60 minutes and 300MB of downloaded data. These restrictions are huge for a people living and working there but probably for a tourist that remains few days it can be enough. Obviously the wifi was created in a time in which the telecom companies were digging gold with high prices on internet connection but at the time I'm writing(year 2020) the fees are much much lower and the roaming no more exists. FO all these reasons we can agree with the fact that as the time goes on the public wifi is going to be abandoned. This comes easily by the fact that all the people will be able to afford an internet connection on the smartphone.[1]
+
+Now I'm going to tell the reader how works the data we have: we have two columns, the first one is the day in which the relevation occurred and the second column is about how many sim cards from foreign people were connected. I would like to let the reader knows that no NANs are present and there is exactly one observation per day. These facts are good because the time serie is easier to be analyzed if all the data is present, if some data was missing then are needed complex assumptions that can be also not valid. Th enumber of sims(the second column) is about the number of sims from all the possible countries in the world. We know that each sim is uniquely identified by the system so if the second columns tells us that 12 sims are connected in a certain date it means that exactly 12 unique and different sims are connected. These are all good facts but we cannot state that all the sims are independent one from the others, for example a group of tourists or a fmaily coming to visit the city should be counted as only one element or more? Until now they are counted separately since every sim is identified uniquely. Another problem that insist on the dataset is that there is no way to know in which part of the city the sims connected.
+
+Is interesting to analyse this kind od data? Obviously yes! The city of Milan was the first city providing a free wifi and it is already now the only one that provides the relative data in the form of open data. This kind of initiatives in Italy are pretty rare so it worths to be studied. We should also remind that in the city are present many boutiques that are of great interest for the foreign people, public events about fashion, luxury and design, music events on the beaches near to Milan and so on. After these also we should remind that in the city is also present the italian stock exchange market and so it can be really interesting to investigate if a certain then in the city is linked to some events in the relative stock exchange market.
 
 
-# Data Description
+# Data Inspection
 
 The dataset comes from the open data provided by all the municipalities of Milan. This repository is available at dati.gov.it. From this repository I selected the data going from June of 2017 to October of the 2019.
 
@@ -78,41 +82,37 @@ names(ll)[1] <- "Date"
 data <- ll
 ```
 
-# Exploration of the Data
+Here we can read which are the most important numbers for the data, these are called the Tukey's five numbers and they are the minimum that is also important to check if there are errors in the data since it should be greater or equal to zero. Zero seems infeasible and it can be a NAN. The data we can read here below are not bad in the sense that no negative values are present but we can note that the space spanned by maximum - minimum is very large, probably the time serie suffers of great variability. The variability is a measure to calculate the volatility of a stock option. If the volatility is high this means the analysis will be more difficult for us since the stationarity is an assumptions for the model we are going to see in the next chapters.
 
 ```{r}
 print("minimum, lower-hinge, median, upper-hinge, maximum)")
 fivenum(data$total.foreign.sim)
 ```
 
+We can check here the histogram of the data and we can see that the data is a bit skewed. In the technical jergon skewness is a measure of the fact that the data in the histogram is not symmetric over a certain accumulation point. For us the accumulation point is the mean and we can see it approximatively on the 100. We can note that the right tail is longer than the left tail. The skewness is not an appreciable characteristic for the time serie since it means that calculating the mean can have no sense and no assumptions on gaussianoty is feasible. Skewness also means that probaly constant variance assumption is not feasible and so no stationarity assumption can hold. These are all difficult facts to deal with. What we can do to cope with this problem? We can try to stabilize the data trying some transformations and checking which is the best one to have a more symmetrical distribution.
+
 ```{r}
 hist(data$total.foreign.sim)
 ```
 
-
-## Preprocessing
-
-Checking Nans
+Here we are going to check the Nans and as we can see they are not present, this is a good fact because it means that there is non need of doing assumptions on the way missing values behave.
 
 ```{r}
-sum(is.na(data$Date))
-sum(is.na(data$total.foreign.sim))
+cat("number of nans in the date column: ", sum(is.na(data$Date)),"\n")
+cat("number of nans in the foreign sims column: ", sum(is.na(data$total.foreign.sim)),"\n")
 ```
 
-Checking limit values
+The mean of the values as stated before id around 100 and it is confirmed here below but it is useless to calculate it if the distribution is skewed.
 
 ```{r}
-min(data$total.foreign.sim)
-max(data$total.foreign.sim)
-```
-
-```{r}
-mean(data$total.foreign.sim)
+cat("mean of the foreign sims column: ", mean(data$total.foreign.sim),"\n")
 mean.data <- mean(data$total.foreign.sim)
 ```
 
+Also the variance is calculated here:
+
 ```{r}
-sd(data$total.foreign.sim)
+cat("mean of the foreign sims column: ", sd(data$total.foreign.sim),"\n")
 sd.data <- sd(data$total.foreign.sim)
 ```
 
@@ -122,54 +122,56 @@ Elements that are good in our ts stand between mean$\pm$std
 up.m.sd <- mean.data + sd.data
 lo.m.sd <- mean.data - sd.data
 
-up.m.sd
-lo.m.sd
+cat("upper confidence value of the foreign sims column: ", up.m.sd,"\n")
+cat("lower confidence value of the foreign sims column: ", lo.m.sd,"\n")
 ```
 
-
-boxplot to check outliers
-
+We are going here to check the outliers with the boxplot, also called the whisker's plot. It is useful for example here in this case to see that there are many outliers on the upper part and no outliers on the lower part. This mean that there are many off-scale values that are too big. This is not a certainty but the boxplot is a good tool for outliers analysis. It is applied on the column of the foreign sims.
 
 ```{r}
-boxplot(data$total.foreign.sim)
-```
-
-```{r}
-qs <- quantile(data$total.foreign.sim)
-qs
-iqr <- IQR(data$total.foreign.sim)
-low.outlier <- qs[2] - (1.5 * iqr)
-hi.outlier <- qs[4] + (1.5 * iqr)
-
-low.outlier
-hi.outlier
+boxplot(data$total.foreign.sim, xlab="Foreign sims")
 ```
 
 ```{r}
-data$total.foreign.sim[data$total.foreign.sim<low.outlier] = mean.data
-data$total.foreign.sim[data$total.foreign.sim>hi.outlier] = mean.data
+#last5[last5<lo.m.sd] <- mean.data
+#data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data$total.foreign.sim), by=1)] <- last5
+
+#data$total.foreign.sim[data$total.foreign.sim<low.outlier] = mean.data
+#data$total.foreign.sim[data$total.foreign.sim>hi.outlier] = mean.data
 ```
 
-Checking last elements of the serie
+We know from an introspection of the data that at the end of the time serie are present some near-to-zero data due to some errors in the measuring way so we are going to eliminate them.
 
 ```{r}
-last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data$total.foreign.sim), by=1)]
-last5[last5<lo.m.sd] <- mean.data
-data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data$total.foreign.sim), by=1)] <- last5
+last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-6, to=length(data$total.foreign.sim), by=1)]
+cat("here the data to investigate on:",last5,"\n")
+
+cat("old length of the vector:", length(data$total.foreign.sim), "\n")
+last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
+cat("here the data to be deleted:",last5,"\n")
+
+data <- data[-seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1),]
+cat("new length of the vector:", length(data$total.foreign.sim), "\n")
+
+last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
+cat("the new last3 elements are:",last5,"\n")
 ```
 
+We choose here to transform the data from the original scale to the square root scale. The transformation was chosen after many empirical tries with the most promising ones.
+
 ```{r}
-#data$total.foreign.sim <- log(data$total.foreign.sim)
+cat("before the transformation(data [0:5]):",data$total.foreign.sim[0:5],"\n")
 data$total.foreign.sim <- sqrt(data$total.foreign.sim)
+cat("after the transformation(data [0:5]):",data$total.foreign.sim[0:5],"\n")
 ```
 
-## Hist after the transformation
+The hist after the transformation here below. As we can see it in better than before, in the sense that now it is bell-shaped so calculating the mean and the standard deviation is meaningful. The only requirement is that at the end the reult is put to the power of two since this is a transformation of the original data.
 
 ```{r}
 hist(data$total.foreign.sim)
 ```
 
-## Boxplot after the transformation
+Now the boxplot is better because the overall number of outliers is less.
 
 ```{r}
 boxplot(data$total.foreign.sim)
@@ -204,8 +206,6 @@ plot(data.xts,ylab=ylab,main=main)
 ```
 
 
-## Week by Week plot
-
 As we can see the greatest number of foreign come after the mid of the week
 
 ```{r}
@@ -216,19 +216,19 @@ boxplot(data.ts~cycle(data.ts))
 
 Many peaks are present we would like to exaplin them and to cut them out to be able to predict with a simple arima
 
-- automatic roaming [https://www.mobileworld.it/2017/08/07/roaming-gratis-europa-condizioni-fair-use-114077/]
-- fashion week [https://www.cameramoda.it/it/milano-moda-donna/] february
-- fashion week 2017 [https://www.milanoweekend.it/articoli/milano-fashion-week-2017-eventi-programma/] february
+- automatic roaming [2]
+- fashion week [3] february
+- fashion week 2017 [4] february
 
 ```{r}
 a <- max(data$total.foreign.sim)
 b <- data$Date[data$total.foreign.sim==a]
 ```
 
-- arch week [https://www.lastampa.it/milano/2017/06/17/news/milano-smart-city-del-futuro-se-ne-parla-all-archweek-in-triennale-1.34584894?refresh_ce]
-- it was a saturday!!
-- it was the orient festival [https://www.wikieventi.it/milano/index.php?data_selezionata=2017-06-17]
-- many mucis events, samsara of papetee and others, folk's festivals, discounts [https://www.wikieventi.it/milano/index.php?data_selezionata=2017-07-22]
+- arch week [5]
+- it was a saturday![6]
+- it was the orient festival [6]
+- many mucis events, samsara of papetee and others, folk's festivals, discounts [7]
 
 # Trend recognition
 
@@ -410,3 +410,13 @@ It was a hard work! Iwas really interesting! I tried a lot of methods to fit the
 
 The lesson I learned from this dataset is that the most foreign come after the mid of the week and the peak of foreign is unexpectedly on Friday and secondarily on Saturday. The number of outliers is very high due to programmed events that break the seasonality of the time serie. The number of foreign connected to the openwifi surely can be a good proxy for the overall number of foreign in milan since the antennas are in the central part of the city. In the days after the break down of the roaming policy the number of foreign surely increased but we cannot prove this fact since the data we have is not enough.
 
+# Bibliography
+
+- [1] http://www.milanotoday.it/green/life/nuovi-hotspot-open-wifi-milano.html
+- [2] https://www.mobileworld.it/2017/08/07/roaming-gratis-europa-condizioni-fair-use-114077/
+- [3] https://www.cameramoda.it/it/milano-moda-donna/
+- [4] https://www.milanoweekend.it/articoli/milano-fashion-week-2017-eventi-programma/
+- [5] https://www.lastampa.it/milano/2017/06/17/news/milano-smart-city-del-futuro-se-ne-parla-all-archweek-in-triennale-1.34584894?refresh_ce
+- [6] https://www.wikieventi.it/milano/index.php?data_selezionata=2017-06-17
+- [7] https://www.wikieventi.it/milano/index.php?data_selezionata=2017-07-22
+- [8] k
