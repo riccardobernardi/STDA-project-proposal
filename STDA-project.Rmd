@@ -250,11 +250,6 @@ We can note that in the 2017 and 2019 the date(17/06) is in both cases a plateau
 
 ![](./mib-2017.png)
 
-![](./mib-2018.png)
-
-
-![](./mib-2019.png)
-
 Now It is interesting to find the trend to recognise if it is going to increase or decrease. In both case it is interesting to discuss because it can be that people is encouraged to use more the personal internet or a personal hotspot due to the decreasing cost of the tariff plans. For example it is possible that on the long run the public wifi will be avoided by people bacause of no need, of low security or slow network or restrictions on use.
 
 ```{r}
