@@ -157,6 +157,21 @@ last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=le
 cat("the new last3 elements are:",last5,"\n")
 ```
 
+```{r}
+first5 <- data$total.foreign.sim[seq(from=0, to=6, by=1)]
+cat("here the data to investigate on:",first5,"\n")
+
+#cat("old length of the vector:", length(data$total.foreign.sim), "\n")
+#last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
+#cat("here the data to be deleted:",last5,"\n")
+
+#data <- data[-seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1),]
+#cat("new length of the vector:", length(data$total.foreign.sim), "\n")
+
+#last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
+#cat("the new last3 elements are:",last5,"\n")
+```
+
 We choose here to transform the data from the original scale to the square root scale. The transformation was chosen after many empirical tries with the most promising ones.
 
 ```{r}
@@ -177,9 +192,7 @@ Now the boxplot is better because the overall number of outliers is less.
 boxplot(data$total.foreign.sim)
 ```
 
-# Time serie is built
-
-Here the time serie is built
+# Time serie Analisys
 
 ```{r}
 require(xts)
@@ -189,7 +202,7 @@ data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 7)
 data.ts <- ts(data$total.foreign.sim, frequency = 7)
 ```
 
-We loaded the dataset from the various datasets aggregating into only one dataset with 655 rows representing 2 years of data gathered. Starting from 05.06.2017 to 30.10.2019. Data is here:
+Here below the time serie is built and as we can see there are present many peaks, those days in whuch the peak is present are days of unexpected increase of connections and we hope this is a good proxy for an incremented number of foreign people in the city of Milan. The peaks are explained in few lines of text but we can imagine that some important events in the city are involved such as the fashion week. We can also note only from this graph that the overall number of connections decrease on the first days of december and it restart rapidly with a plateau until september(excluding peaks). We can so hypotesize a seasonality of one year for the data but since we have too few data to recognize a 1 year seasonality we are going to use a week seasonality. We attempted with all the possible seasonalities and this was the best and also the most explainable. For example a seasonality of 1 month is not sensible with this kind of data since every month is very different from the others. A seasonality of a week instead is useful to find the most frequented days of the week.
 
 ```{r}
 main <- "foreign sim per day"
@@ -206,31 +219,43 @@ plot(data.xts,ylab=ylab,main=main)
 ```
 
 
-As we can see the greatest number of foreign come after the mid of the week
+Here we can see the whole time serie folded on a week. Before doing this folding operation we checked that the $5^th$ of June is a Monday, that is our starting point. This is because is otherwise an offset would should be applied to rescale. We can note that the most frequented days are the friday and saturday. It is not a great news but it can be important for the sellers to know quantitatively how much they can sell on the days of the week.
 
 ```{r}
-boxplot(data.ts~cycle(data.ts))
+boxplot(data.ts~cycle(data.ts),names=c("Mo","Tu","We","Th","Fr","Sa","Su"))
 ```
 
-# Peaks Explanation
+## Peaks Explanation
 
-Many peaks are present we would like to exaplin them and to cut them out to be able to predict with a simple arima
-
-- automatic roaming [2]
-- fashion week [3] february
-- fashion week 2017 [4] february
+Many peaks are present and we are going here to explain some of them, the most important ones.
 
 ```{r}
 a <- max(data$total.foreign.sim)
 b <- data$Date[data$total.foreign.sim==a]
+cat("the highest number of connected sims happened in the days:",b,"\n")
 ```
 
-- arch week [5]
+As we can read here above the greatest number of connections happened on the $17^{th}$ of June for the years provided and we know that such days are dedicated to the fashion week but also we know that on the $17^{th}$ of June of 2017 the famous band of the Blink182 gave a concert in Milan. We also know that the year 2017 is the one in which the automatic roaming were approved encouraging people travelling. But it is not all done we have here below a list of the most influential events that happened in the critical days.
+
+- automatic roaming [2]
+- arch. week [5]
 - it was a saturday![6]
 - it was the orient festival [6]
-- many mucis events, samsara of papetee and others, folk's festivals, discounts [7]
+- many music events, samsara of papetee and others, folk's festivals, discounts [7]
+- fashion week on 2017-06-17 [8]
+- blink 182 concert on 2017-06-17 [9]
 
-# Trend recognition
+We would also like to search for a linkage between these dates and the FTSE-MIB index on these days, check below[10].
+We can note that in the 2017 and 2019 the date(17/06) is in both cases a plateau and after that day the value of the index start increasing. In the case of the year 2018 it is not true this fact and so it can be an exception or ot can be that this linkage with this exchance index is not valid, this is only an experiment and it can be repeated with other indexes to find a correlation. This is important because an interesting correlation between this kind of data and the stock market can be of interest for the population.
+
+![](./mib-2017.png)
+
+![](./mib-2018.png)
+
+
+![](./mib-2019.png)
+
+Now It is interesting to find the trend to recognise if it is going to increase or decrease. In both case it is interesting to discuss because it can be that people is encouraged to use more the personal internet or a personal hotspot due to the decreasing cost of the tariff plans. For example it is possible that on the long run the public wifi will be avoided by people bacause of no need, of low security or slow network or restrictions on use.
 
 ```{r}
 tt<-as.numeric(time(data.ts))
@@ -244,7 +269,7 @@ lines(tt,predict(fit4),col='blue',lwd=2)
 legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red","blue"))
 ```
 
-## Smoothing
+Here we are going to smooth the data since there are many outliers that can decrease the overall performance of the model. This is not a problem since the outliers were explained before through a deep search of the events that caused them to be outliers.
 
 ```{r}
 require(fpp)
@@ -254,12 +279,16 @@ plot(data.ts, main = "moving average annual trend")
 lines(trendpattern,col="red")
 ```
 
+Some NaNs in this plot are present so we omit them. This is becuase of the fact that the mean is not defined on the all time serie but only in the central part, the borders are undefined.
+
 ```{r}
 seasonality <- data.ts - trendpattern
+cat("number of nans: ",sum(is.na(seasonality)),"\n")
+seasonality <- na.omit(seasonality)
 plot(seasonality)
 ```
 
-## Splitting
+Now we split the data for being able to test on them
 
 ```{r}
 require(TSstudio)
@@ -267,37 +296,28 @@ split <- ts_split(ts.obj = data.ts, sample.out = 100)
 
 data.ts <- split$train
 testing <- split$test
+
+cat("train size:",length(data.ts),"\n")
+cat("test size:",length(testing),"\n")
 ```
 
 # Models
 
-We tried many models, the most known is the arma but we tried:
-- arma
-- arima
-- sarima
-- var
-- rugarch
-- fgarch
+We tried many models, the most known is the arma but we investigated also the possibility of using the VAR but it is only for more than one response variable and the Garch in many variants such as the rugarch and the fgarch. These last two variants of the garch were pretty interesting for us because they are able to model the residuals with a non-constant variability. At the end we decided to drop these kind of models because of the increased complexity and the more difficult interpretability. We also would like to model the data with an LSTM model but we are not doing it right now because these kind of models have no explanation at all. After this it is known that they are very well performing.
 
-and others, i'm reporting here only the best one and some ideas for the worst performing ones.
+We searched for more than one seasonlity with the msts/mstl functions investigating a lot of possibilities such as jointly to have a weekly, monthly, quarterly, annual seasonalities. We also tried many others such as every 180 days, every 35 days and so on. These experiments were conducted to search the best seasonlity using as a comparison method the residuals and the relative measures on the stationarity of the residuals such as the Ljiung-Box and the Box-Jenkins. These were experiments and we found no good improvements so we decided to go into more preprocessing as the reader can read in the previous chapters.
 
 ## Arima
 
-To find the best arima in a such complicate time serie we are going to exploit a grid search algorithm done via the auto arima function provided by the fpp package
+To find the best arima in a such complicate time serie we are going to exploit a grid search algorithm done via the auto arima function provided by the fpp package. This is not the cheapest way of doing but after many and many acf and pacf difficult to be read we decided to use this tool. It is going to search for all the most feasible combinations of the parameters (p,d,q) fot the non-seasonal part and the (p,d,q) for the seasonal part of frequency "[7]". We would like to remember that p is the number of predecessors that are correlated to the current value in the ar model, the d is the number of differentiations(to move the time serie into a more stationary one) and the last is the q that is the number of values to be used to calculate the moving average in one point, the moving average is symmetric.
 
 ```{r}
 require(fpp)
 require(forecast)
-fit <- auto.arima(data.ts,stepwise=TRUE,trace=TRUE,ic = "bic", approximation = FALSE)
+fit <- auto.arima(data.ts,stepwise=TRUE,trace=FALSE,ic = "bic", approximation = FALSE)
 ```
 
-A forecast on the training set looks like this one below:
-
-```{r}
-plot(forecast(fit))
-```
-
-Here we are going to plot a forecast on a part of the data that was never seen by the arima model, the plots looks not so bad.
+Here we are going to plot a forecast on a part of the data that was never seen by the arima model.
 
 ```{r}
 #training <- subset(auscafe, end=length(auscafe)-61)
@@ -329,51 +349,16 @@ bp <- Box.test(residuals(fit), lag = 24, type = "Box-Pierce")
 bp
 ```
 
-The diagnostic here below confirms at least that the auto arima chose the right differentiation parameter.
-
-```{r}
-########################################################
-#### Residuals diagnostics in forecasting
-########################################################
-
-res.fr <- residuals(pred)
-
-par(mfrow=c(1,3))
-
-plot(res.fr, main="Residuals from ARIMA method",
-  ylab="", xlab="Years")
-
-Acf(res.fr, main="ACF of residuals")
-
-u <- residuals(fit)
-
-m<-mean(u)
-std<-sqrt(var(u))
-hist(u, breaks=20, col="gray", prob=TRUE, 
-xlab="Residuals", main="Histogram of residuals\n with Normal Curve")
-curve(dnorm(x, mean=m, sd=std), 
-      col="black", lwd=2, add=TRUE)
-```
-
-```{r}
-library(tseries)
-kpss.test(diff(data.ts))
-ndiffs(data.ts)
-plot(data.ts)
-```
-
-
 The plot is not good but AIC and BIC are very high, we should try with a multi seasonal decomposition
 
 ```{r}
 frequency(data.ts)
 ```
 
-## Searching for multi seasonalities
-
-We searched for all the possible multi seasonalities using the msts package but at the end adding many seasonalities did not helped in finding better residuals or clearer trends and seasonalities. Adding more and more just created a complicated useless model that scored the same as the base one.
-
 ```{r}
+#Searching for multi seasonalities
+
+#We searched for all the possible multi seasonalities using the msts package but at the end adding many seasonalities did #not helped in finding better residuals or clearer trends and seasonalities. Adding more and more just created a #complicated useless model that scored the same as the base one.
 # library(lubridate)
 # library(dplyr)
 # library(forecast)
@@ -385,11 +370,9 @@ We searched for all the possible multi seasonalities using the msts package but 
 # acf(na.omit(dec$random), lag.max = 30)
 ```
 
-## RUGARCH
-
-We tried this model but it was not useful for great predictions, residuals were much more scattered than arima.
-
 ```{r}
+# Rugarch
+# We tried this model but it was not useful for great predictions, residuals were much more scattered than arima.
 # require(rugarch)
 # spec = ugarchspec()
 # fit = ugarchfit(spec = spec, data = data.ts)
@@ -412,6 +395,9 @@ The lesson I learned from this dataset is that the most foreign come after the m
 
 # Bibliography
 
+- Time series analysis and application, Shumway Stoffer
+- Statistics for Spatio Temporal Data Analysis, Cressie Wikle
+- The slides and labs of the course made by professor Isadora Villalobos Antoniano
 - [1] http://www.milanotoday.it/green/life/nuovi-hotspot-open-wifi-milano.html
 - [2] https://www.mobileworld.it/2017/08/07/roaming-gratis-europa-condizioni-fair-use-114077/
 - [3] https://www.cameramoda.it/it/milano-moda-donna/
@@ -419,4 +405,6 @@ The lesson I learned from this dataset is that the most foreign come after the m
 - [5] https://www.lastampa.it/milano/2017/06/17/news/milano-smart-city-del-futuro-se-ne-parla-all-archweek-in-triennale-1.34584894?refresh_ce
 - [6] https://www.wikieventi.it/milano/index.php?data_selezionata=2017-06-17
 - [7] https://www.wikieventi.it/milano/index.php?data_selezionata=2017-07-22
-- [8] k
+- [8] https://www.alamy.it/foto-immagine-milano-17-giugno-uomo-con-pelle-nera-borsa-hermes-prima-di-versace-fashion-show-la-settimana-della-moda-milanese-street-style-il-17-giugno-2017-a-milano-146439606.html
+- [9] http://www.rockon.it/concerti/linkin-park-blink-182-in-concerto-sabato-17-giugno-a-milano-monza/
+- [10] https://www.borsaitaliana.it/borsa/indici/indici-in-continua/grafico.html?indexCode=FTSEMIB&lang=it
