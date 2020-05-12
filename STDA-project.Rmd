@@ -258,20 +258,6 @@ We can note that in the 2017 and 2019 the date(17/06) is in both cases a plateau
 Now It is interesting to find the trend to recognise if it is going to increase or decrease. In both case it is interesting to discuss because it can be that people is encouraged to use more the personal internet or a personal hotspot due to the decreasing cost of the tariff plans. For example it is possible that on the long run the public wifi will be avoided by people bacause of no need, of low security or slow network or restrictions on use.
 
 ```{r}
-tt<-as.numeric(time(data.ts))
-fit2<-lm(data.ts~poly(tt,degree=2,raw=TRUE))
-fit4<-lm(data.ts~poly(tt,degree=8,raw=TRUE))
-
-main <- "foreign sim per day"
-plot(data.ts,ylab=ylab,main=main)
-lines(tt,predict(fit2),col='red',lwd=2)
-lines(tt,predict(fit4),col='blue',lwd=2)
-legend("bottomright",legend = c("2nd order","4th order"),lwd=2,lty=1,col=c("red","blue"))
-```
-
-Here we are going to smooth the data since there are many outliers that can decrease the overall performance of the model. This is not a problem since the outliers were explained before through a deep search of the events that caused them to be outliers.
-
-```{r}
 require(fpp)
 require(forecast)
 trendpattern = timeSeries::filter(data.ts, filter = rep(1/15,15), sides=2)
@@ -279,7 +265,7 @@ plot(data.ts, main = "moving average annual trend")
 lines(trendpattern,col="red")
 ```
 
-Some NaNs in this plot are present so we omit them. This is becuase of the fact that the mean is not defined on the all time serie but only in the central part, the borders are undefined.
+Here we are going to expose the seasonality and the noise detrending. It is all about taking the trend calculated in the previous step and subtracting it from the the data. The remaing part is the seasonality and the noise. Some NaNs in this plot are present so we omit them. This is becuase of the fact that the mean is not defined on the all time serie but only in the central part, the borders are undefined. As we can see it does not seem that it is present a clear seasonality and also it is not stationary. After some experimentations we know that no other decompositions or operations can improve this situation so we move to the arima fitting. We tried to decompose in many ways also using multi seasonalities decomposition but no way that a seasonality or a stationary time serie is found.
 
 ```{r}
 seasonality <- data.ts - trendpattern
@@ -301,13 +287,11 @@ cat("train size:",length(data.ts),"\n")
 cat("test size:",length(testing),"\n")
 ```
 
-# Models
+# Modelling with Arima
 
 We tried many models, the most known is the arma but we investigated also the possibility of using the VAR but it is only for more than one response variable and the Garch in many variants such as the rugarch and the fgarch. These last two variants of the garch were pretty interesting for us because they are able to model the residuals with a non-constant variability. At the end we decided to drop these kind of models because of the increased complexity and the more difficult interpretability. We also would like to model the data with an LSTM model but we are not doing it right now because these kind of models have no explanation at all. After this it is known that they are very well performing.
 
 We searched for more than one seasonlity with the msts/mstl functions investigating a lot of possibilities such as jointly to have a weekly, monthly, quarterly, annual seasonalities. We also tried many others such as every 180 days, every 35 days and so on. These experiments were conducted to search the best seasonlity using as a comparison method the residuals and the relative measures on the stationarity of the residuals such as the Ljiung-Box and the Box-Jenkins. These were experiments and we found no good improvements so we decided to go into more preprocessing as the reader can read in the previous chapters.
-
-## Arima
 
 To find the best arima in a such complicate time serie we are going to exploit a grid search algorithm done via the auto arima function provided by the fpp package. This is not the cheapest way of doing but after many and many acf and pacf difficult to be read we decided to use this tool. It is going to search for all the most feasible combinations of the parameters (p,d,q) fot the non-seasonal part and the (p,d,q) for the seasonal part of frequency "[7]". We would like to remember that p is the number of predecessors that are correlated to the current value in the ar model, the d is the number of differentiations(to move the time serie into a more stationary one) and the last is the q that is the number of values to be used to calculate the moving average in one point, the moving average is symmetric.
 
@@ -348,42 +332,6 @@ lb
 bp <- Box.test(residuals(fit), lag = 24, type = "Box-Pierce")
 bp
 ```
-
-The plot is not good but AIC and BIC are very high, we should try with a multi seasonal decomposition
-
-```{r}
-frequency(data.ts)
-```
-
-```{r}
-#Searching for multi seasonalities
-
-#We searched for all the possible multi seasonalities using the msts package but at the end adding many seasonalities did #not helped in finding better residuals or clearer trends and seasonalities. Adding more and more just created a #complicated useless model that scored the same as the base one.
-# library(lubridate)
-# library(dplyr)
-# library(forecast)
-# library(ggplot2)
-# library(scales)
-# 
-# data.ts %>% decompose(type="multiplicative") %>% autoplot()
-# dec <- decompose(data.ts)
-# acf(na.omit(dec$random), lag.max = 30)
-```
-
-```{r}
-# Rugarch
-# We tried this model but it was not useful for great predictions, residuals were much more scattered than arima.
-# require(rugarch)
-# spec = ugarchspec()
-# fit = ugarchfit(spec = spec, data = data.ts)
-# show(fit)
-```
-
-
-```{r}
-# plot(fit, which='all')
-```
-
 
 
 # Conclusions
