@@ -26,10 +26,19 @@ Professor: Isadora Antoniano-Villalobos
 <!-- \newpage -->
 
 ```{r include = FALSE}
+###### GENERAL SETUP of the Sheet
+# this improves the visualization of the plots
 knitr::opts_chunk$set(fig.width=10, fig.height=5, fig.path='Figs/',
                       echo=FALSE, warning=FALSE, message=FALSE)
 
+# this cleans the environment
 rm(list=ls())
+```
+
+```{r}
+###### GENERAL SETUP of the Sheet
+# this is the split size for the forecasting part
+hh <- 50
 ```
 
 ![](./bannerOpenWifi_SCALA_Mirror.png)
@@ -49,17 +58,9 @@ Is interesting to analyse this kind od data? Obviously yes! The city of Milan wa
 
 # Data Inspection
 
-The dataset comes from the open data provided by all the municipalities of Milan. This repository is available at dati.gov.it. From this repository I selected the data going from June of 2017 to October of the 2019.
+The dataset comes from the open data provided by all the municipalities of Milan. This repository is available at dati.gov.it. From this repository I selected the data going from the $5^{th}$ of June of 2017 to the $30^{th}$ of October of the 2019.
 
-Characteristics of the DataSet:
-
-- the dataset contains 2 columns "Date, Number_of_Foreign_Sims"
-- has 868 rows
-- Dates goes from from 05/06/17 to 30/10/19 (~2 years)
-- the datasets have no NA
-- no lacking days
-- the "Number_of_Foreign_Sims" is a discrete variable about total number of foreign sims in a certain Date connected to the OpenWifi of Milan
-
+Some characteristics of the DataSet are the fact that we have 2 columns "Date, Number_of_Foreign_Sims", the first is the date and the second the number of foreign people. We have in total 868 rows by 2 columns. The datasets have no NANs, no lacking days. The "Number_of_Foreign_Sims" is a discrete variable about total number of foreign sims in a certain Date connected to the OpenWifi of Milan.
 
 ```{r}
 setwd("~/Documents/GitHub/STDA-project-proposal")
@@ -95,36 +96,7 @@ We can check here the histogram of the data and we can see that the data is a bi
 hist(data$total.foreign.sim)
 ```
 
-Here we are going to check the Nans and as we can see they are not present, this is a good fact because it means that there is non need of doing assumptions on the way missing values behave.
-
-```{r}
-cat("number of nans in the date column: ", sum(is.na(data$Date)),"\n")
-cat("number of nans in the foreign sims column: ", sum(is.na(data$total.foreign.sim)),"\n")
-```
-
-The mean of the values as stated before id around 100 and it is confirmed here below but it is useless to calculate it if the distribution is skewed.
-
-```{r}
-cat("mean of the foreign sims column: ", mean(data$total.foreign.sim),"\n")
-mean.data <- mean(data$total.foreign.sim)
-```
-
-Also the variance is calculated here:
-
-```{r}
-cat("mean of the foreign sims column: ", sd(data$total.foreign.sim),"\n")
-sd.data <- sd(data$total.foreign.sim)
-```
-
-Elements that are good in our ts stand between mean$\pm$std
-
-```{r}
-up.m.sd <- mean.data + sd.data
-lo.m.sd <- mean.data - sd.data
-
-cat("upper confidence value of the foreign sims column: ", up.m.sd,"\n")
-cat("lower confidence value of the foreign sims column: ", lo.m.sd,"\n")
-```
+The mean of the values as stated before id around 100 but it is useless to calculate it if the distribution is skewed.
 
 We are going here to check the outliers with the boxplot, also called the whisker's plot. It is useful for example here in this case to see that there are many outliers on the upper part and no outliers on the lower part. This mean that there are many off-scale values that are too big. This is not a certainty but the boxplot is a good tool for outliers analysis. It is applied on the column of the foreign sims.
 
@@ -132,43 +104,20 @@ We are going here to check the outliers with the boxplot, also called the whiske
 boxplot(data$total.foreign.sim, xlab="Foreign sims")
 ```
 
-```{r}
-#last5[last5<lo.m.sd] <- mean.data
-#data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-5, to=length(data$total.foreign.sim), by=1)] <- last5
-
-#data$total.foreign.sim[data$total.foreign.sim<low.outlier] = mean.data
-#data$total.foreign.sim[data$total.foreign.sim>hi.outlier] = mean.data
-```
-
-We know from an introspection of the data that at the end of the time serie are present some near-to-zero data due to some errors in the measuring way so we are going to eliminate them.
+We know from an inspection of the data that at the end of the time serie are present some near-to-zero data due to some errors in the measuring way so we are going to eliminate them.
 
 ```{r}
 last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-6, to=length(data$total.foreign.sim), by=1)]
-cat("here the data to investigate on:",last5,"\n")
-
-cat("old length of the vector:", length(data$total.foreign.sim), "\n")
-last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
-cat("here the data to be deleted:",last5,"\n")
-
-data <- data[-seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1),]
-cat("new length of the vector:", length(data$total.foreign.sim), "\n")
-
-last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
-cat("the new last3 elements are:",last5,"\n")
-```
-
-```{r}
-first5 <- data$total.foreign.sim[seq(from=0, to=6, by=1)]
-cat("here the data to investigate on:",first5,"\n")
+#cat("here the data to investigate on:",last5,"\n")
 
 #cat("old length of the vector:", length(data$total.foreign.sim), "\n")
-#last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
+last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
 #cat("here the data to be deleted:",last5,"\n")
 
-#data <- data[-seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1),]
+data <- data[-seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1),]
 #cat("new length of the vector:", length(data$total.foreign.sim), "\n")
 
-#last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
+last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
 #cat("the new last3 elements are:",last5,"\n")
 ```
 
@@ -197,7 +146,6 @@ boxplot(data$total.foreign.sim)
 ```{r}
 require(xts)
 data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
-#typeof(data$date[1])
 data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 7)
 data.ts <- ts(data$total.foreign.sim, frequency = 7)
 ```
@@ -209,15 +157,6 @@ main <- "foreign sim per day"
 ylab<-"Tot of sim in that day"
 plot(data.xts,ylab=ylab,main=main)
 ```
-
-
-
-```{r}
-#main <- "foreign sim per day"
-#ylab<-"Tot of sim in that day"
-#plot(data.ts,ylab=ylab,main=main)
-```
-
 
 Here we can see the whole time serie folded on a week. Before doing this folding operation we checked that the $5^th$ of June is a Monday, that is our starting point. This is because is otherwise an offset would should be applied to rescale. We can note that the most frequented days are the friday and saturday. It is not a great news but it can be important for the sellers to know quantitatively how much they can sell on the days of the week.
 
@@ -232,7 +171,7 @@ Many peaks are present and we are going here to explain some of them, the most i
 ```{r}
 a <- max(data$total.foreign.sim)
 b <- data$Date[data$total.foreign.sim==a]
-cat("the highest number of connected sims happened in the days:",b,"\n")
+cat("the highest number of connected sims happened in the days: ",as.character.Date(b)," \n")
 ```
 
 As we can read here above the greatest number of connections happened on the $17^{th}$ of June for the years provided and we know that such days are dedicated to the fashion week but also we know that on the $17^{th}$ of June of 2017 the famous band of the Blink182 gave a concert in Milan. We also know that the year 2017 is the one in which the automatic roaming were approved encouraging people travelling. But it is not all done we have here below a list of the most influential events that happened in the critical days.
@@ -273,7 +212,7 @@ Now we split the data for being able to test on them
 
 ```{r}
 require(TSstudio)
-split <- ts_split(ts.obj = data.ts, sample.out = 100)
+split <- ts_split(ts.obj = data.ts, sample.out = hh)
 
 data.ts <- split$train
 testing <- split$test
@@ -294,25 +233,23 @@ To find the best arima in a such complicate time serie we are going to exploit a
 require(fpp)
 require(forecast)
 fit <- auto.arima(data.ts,stepwise=TRUE,trace=FALSE,ic = "bic", approximation = FALSE)
+# fit
 ```
 
 Here we are going to plot a forecast on a part of the data that was never seen by the arima model.
 
 ```{r}
-#training <- subset(auscafe, end=length(auscafe)-61)
-#test <- subset(auscafe, start=length(auscafe)-60)
-#cafe.train <- Arima(training, order=c(2,1,1),seasonal=c(0,1,2), lambda=0)
-data.ts %>% forecast(h=100) %>% autoplot() + autolayer(testing)
+forecast(fit, h=hh) %>% autoplot() + autolayer(testing)
 ```
 
-The accuracy on the test set is only two percentages points lower than on the training set. We are using 100 points.
+The accuracy on the test set is few percentages points lower than on the training set. We are using 100 points. Reading the data the results are not good as we can imagine, we would like a 0% MAPE and 0 for the RMSE. This is obviously not possible because the data is very volative and not stationary, to reach this point we modified a lot the time serie so the error is obviously present but as we can see here above the prediction is not so far away from the ground truth.
 
 ```{r}
-pred <- forecast(fit, h=100)
+pred <- forecast(fit, h=hh)
 accuracy(pred, testing)
 ```
 
-Actually here below we can see that residuals are not pretty good but after many weeks of attempts with many models, all the poossible seasonalities, all the decomposition, all the tricks available i'm pretty sure that this is the best trade-off between complexity of the models used, accuracy and processing of the dataset.
+Actually here below we can see that residuals are not pretty good in the sense that is not so clear if we should prefer a AR model or a MA model but after many weeks of attempts with many models, all the poossible seasonalities, all the decomposition, all the tricks available i'm pretty sure that this is the best trade-off between complexity of the models used, accuracy and processing of the dataset.
 
 ```{r}
 tsdisplay(residuals(fit))
@@ -331,15 +268,13 @@ bp
 
 # Conclusions
 
+The lesson I learned from this dataset is that the most foreign come after the mid of the week and the peak of foreign is unexpectedly on Friday and secondarily on Saturday. The number of outliers is very high due to programmed events that break the seasonality of the time serie. The number of foreign people connected to the open-wifi can be a good proxy for the overall number of foreign in milan since the antennas are in the central part of the city but we cannot be sure until a central authority confirms our hypothesis by providing the number of actual foreign people in MIlan. In the days after the break down of the roaming policy the number of foreign surely increased but we cannot prove this fact since the data we have is not enough. We tried also to check for a correlation between the stock market behaviour and the peaks in the time serie but this requires a specific analysis on its own.
 
-It was a hard work! Iwas really interesting! I tried a lot of methods to fit the data and obtain good forecasting and good residuals. I tried searching for multi seasonalities, difference some times to reach stationarity, detrending with lm and ma, smoothing. I tried by hand many arima models. I tried to decompose the time serie in many ways. I tried all the possible frequencies that can be thought as valid. Eventually it was really interesting! I experimented a lot.
-
-The lesson I learned from this dataset is that the most foreign come after the mid of the week and the peak of foreign is unexpectedly on Friday and secondarily on Saturday. The number of outliers is very high due to programmed events that break the seasonality of the time serie. The number of foreign connected to the openwifi surely can be a good proxy for the overall number of foreign in milan since the antennas are in the central part of the city. In the days after the break down of the roaming policy the number of foreign surely increased but we cannot prove this fact since the data we have is not enough.
-
+\newpage
 # Bibliography
 
-- Time series analysis and application, Shumway Stoffer
-- Statistics for Spatio Temporal Data Analysis, Cressie Wikle
+- Time series analysis and application, Shumway, Stoffer
+- Statistics for Spatio Temporal Data Analysis, Cressie, Wikle
 - The slides and labs of the course made by professor Isadora Villalobos Antoniano
 - [1] http://www.milanotoday.it/green/life/nuovi-hotspot-open-wifi-milano.html
 - [2] https://www.mobileworld.it/2017/08/07/roaming-gratis-europa-condizioni-fair-use-114077/
