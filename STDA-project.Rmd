@@ -277,12 +277,23 @@ The lesson I learned from this dataset is that the most foreign come after the m
 - Statistics for Spatio Temporal Data Analysis, Cressie, Wikle
 - The slides and labs of the course made by professor Isadora Villalobos Antoniano
 - [1] http://www.milanotoday.it/green/life/nuovi-hotspot-open-wifi-milano.html
-- [2] https://www.mobileworld.it/2017/08/07/roaming-gratis-europa-condizioni-fair-use-114077/
+- [2] https://www.mobileworld.it/2017/08/07/roaming-gratis-europa-condizioni-
+fair-use-114077/
 - [3] https://www.cameramoda.it/it/milano-moda-donna/
-- [4] https://www.milanoweekend.it/articoli/milano-fashion-week-2017-eventi-programma/
-- [5] https://www.lastampa.it/milano/2017/06/17/news/milano-smart-city-del-futuro-se-ne-parla-all-archweek-in-triennale-1.34584894?refresh_ce
+- [4] https://www.milanoweekend.it/articoli/milano-fashion-week-2017-eventi-
+programma/
+- [5] https://www.lastampa.it/milano/2017/06/17/news/milano-smart-city-del-
+futuro-se-ne-parla-all-archweek-in-triennale-1.34584894?refresh_ce
 - [6] https://www.wikieventi.it/milano/index.php?data_selezionata=2017-06-17
 - [7] https://www.wikieventi.it/milano/index.php?data_selezionata=2017-07-22
-- [8] https://www.alamy.it/foto-immagine-milano-17-giugno-uomo-con-pelle-nera-borsa-hermes-prima-di-versace-fashion-show-la-settimana-della-moda-milanese-street-style-il-17-giugno-2017-a-milano-146439606.html
-- [9] http://www.rockon.it/concerti/linkin-park-blink-182-in-concerto-sabato-17-giugno-a-milano-monza/
-- [10] https://www.borsaitaliana.it/borsa/indici/indici-in-continua/grafico.html?indexCode=FTSEMIB&lang=it
+- [8] https://www.alamy.it/foto-immagine-milano-17-giugno-uomo-con-pelle-nera-
+borsa-hermes-prima-di-versace-fashion-show-la-settimana-della-moda-milanese-
+street-style-il-17-giugno-2017-a-milano-146439606.html
+- [9] http://www.rockon.it/concerti/linkin-park-blink-182-in-concerto-sabato-
+17-giugno-a-milano-monza/
+- [10] https://www.borsaitaliana.it/borsa/indici/indici-in-  
+continua/grafico.html?indexCode=FTSEMIB&lang=it
+
+
+
+
