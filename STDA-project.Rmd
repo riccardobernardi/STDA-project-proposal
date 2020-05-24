@@ -63,8 +63,6 @@ The dataset comes from the open data provided by all the municipalities of Milan
 Some characteristics of the DataSet are the fact that we have 2 columns "Date, Number_of_Foreign_Sims", the first is the date and the second the number of foreign people. We have in total 868 rows by 2 columns. The datasets have no NANs, no lacking days. The "Number_of_Foreign_Sims" is a discrete variable about total number of foreign sims in a certain Date connected to the OpenWifi of Milan.
 
 ```{r}
-# set the directory
-setwd("~/Documents/GitHub/STDA-project-proposal")
 # set the seed for the reproducibility
 set.seed(25061997)
 
@@ -73,7 +71,7 @@ require(zoo)
 require(xts)
 
 # load the data
-data <- read.csv("opendatamilano2017-2018-2019.csv",sep = ",")
+data <- read.csv("./opendatamilano2017-2018-2019.csv",sep = ",")
 ```
 
 Here we can read which are the most important numbers for the data, these are called the Tukey's five numbers and they are the minimum that is also important to check if there are errors in the data since it should be greater or equal to zero. Zero seems infeasible and it can be a NAN. The data we can read here below are not bad in the sense that no negative values are present but we can note that the space spanned by maximum - minimum is very large, probably the time serie suffers of great variability. The variability is a measure to calculate the volatility of a stock option. If the volatility is high this means the analysis will be more difficult for us since the stationarity is an assumptions for the model we are going to see in the next chapters.
