@@ -72,22 +72,8 @@ set.seed(25061997)
 require(zoo)
 require(xts)
 
-# load the 3 dataset, they will be merged and cleaned
-data <- read.csv("opendatamilano2017.csv",sep = ";")
-data <- rbind(data, read.csv("opendatamilano2018.csv",sep = ";"))
-data <- rbind(data, read.csv("opendatamilano2019.csv",sep = ";"))
-
-# delete columns not interesting for the sake of the analysis
-data$prefix <- NULL
-data$country <- NULL
-data$num <- NULL
-data$total.ita.sim <- NULL
-
-# since foreign presence are registered by country and by day we aggregate to obtain only one entry for each day losing information of the country of the visitor
-ll <- aggregate.data.frame(data$total.foreign.sim,by=list(data$date),FUN=mean)
-names(ll)[2] <- "total.foreign.sim"
-names(ll)[1] <- "Date"
-data <- ll
+# load the data
+data <- read.csv("opendatamilano2017-2018-2019.csv",sep = ",")
 ```
 
 Here we can read which are the most important numbers for the data, these are called the Tukey's five numbers and they are the minimum that is also important to check if there are errors in the data since it should be greater or equal to zero. Zero seems infeasible and it can be a NAN. The data we can read here below are not bad in the sense that no negative values are present but we can note that the space spanned by maximum - minimum is very large, probably the time serie suffers of great variability. The variability is a measure to calculate the volatility of a stock option. If the volatility is high this means the analysis will be more difficult for us since the stationarity is an assumptions for the model we are going to see in the next chapters.
