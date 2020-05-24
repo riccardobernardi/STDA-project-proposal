@@ -45,15 +45,15 @@ hh <- 50
 
 # Introduction & Motivation
 
-The project is about finding if some patterns are present in the way foreign people connects to the wifi of the city of Milan in Italy. This wifi was installed in the first days of august of the 2014 but the data if from the $5^{th}$ of July od the 2015. It was installed by the municipality of the city and it is public but it is only available in some areas of the city. We can see here below that the areas covered are the most attractive from the point of view of a tourist so for this reason we can believe that this is a good proxy for the number of people in the city.
+The project is about finding if some patterns are present in the way foreign people connects to the wifi of the city of Milan in Italy. This wifi was installed in the first days of august of the 2014 but the data if from the $5^{th}$ of July of the 2015. It was installed by the municipality of the city and it is public but it is only available in some areas of the city. We can see here below that the areas covered are the most attractive from the point of view of a tourist so for this reason we can believe that this is a good proxy for the number of foreign people in the city.
 
 ![](./mappa open wifi milano-2-2.jpg)
 
-It permits to a user that is logged in to use the free wifi for a maximum time of 60 minutes and 300MB of downloaded data. These restrictions are huge for a people living and working there but probably for a tourist that remains few days it can be enough. Obviously the wifi was created in a time in which the telecom companies were digging gold with high prices on internet connection but at the time I'm writing(year 2020) the fees are much much lower and the roaming no more exists. FO all these reasons we can agree with the fact that as the time goes on the public wifi is going to be abandoned. This comes easily by the fact that all the people will be able to afford an internet connection on the smartphone.[1]
+It permits to a user that is logged in to use the free wifi for a maximum time of 60 minutes and 300MB of downloaded data. These restrictions are huge for a people living and working there but probably for a tourist that remains few days it can be enough. Obviously the wifi was created in a time in which the telecommunication companies were digging gold with high prices on internet connection but at the time I'm writing(year 2020) the fees are much much lower and the roaming no more exists. The interest for the public wifi was increasing and so the city of milan installed many more access points in 2014[1]. Now we can agree on the fact that in many cases we can use our mobile connectivity since it is enough, this is due to the so-called "iliad revolution". In practice in the 2019 this company disrupted the market announcing astonishing lower prices(accompanied with transparent policies) than ever revealing the presence, probably, of a cartel between the major telco companies in Italy. This is to tell the reader that probably the trend will be descending in this time serie[11].
 
-Now I'm going to tell the reader how works the data we have: we have two columns, the first one is the day in which the relevation occurred and the second column is about how many sim cards from foreign people were connected. I would like to let the reader knows that no NANs are present and there is exactly one observation per day. These facts are good because the time serie is easier to be analyzed if all the data is present, if some data was missing then are needed complex assumptions that can be also not valid. Th enumber of sims(the second column) is about the number of sims from all the possible countries in the world. We know that each sim is uniquely identified by the system so if the second columns tells us that 12 sims are connected in a certain date it means that exactly 12 unique and different sims are connected. These are all good facts but we cannot state that all the sims are independent one from the others, for example a group of tourists or a fmaily coming to visit the city should be counted as only one element or more? Until now they are counted separately since every sim is identified uniquely. Another problem that insist on the dataset is that there is no way to know in which part of the city the sims connected.
+Now I'm going to present to the reader the data we gathered: we have two columns, the first one is the day in which the relevation occurred and the second column is about how many sim cards from foreign people were connected. I would like to let the reader knows that no NANs are present and there is exactly one observation per day. These facts are good because the time serie is easier to be analyzed if all the data is present, if some data was missing then are needed complex assumptions that can be also not valid. The number of sims(the second column) is about the number of sims from all the possible countries in the world. We know that each sim is uniquely identified by the system so if the second columns tells us that 12 sims are connected in a certain date it means that exactly 12 unique and different sims are connected. These are all good facts but we cannot state that all the sims are independent one from the others, for example a group of tourists or a family coming to visit the city should be counted as only one element or singularly? Until now they are counted separately since every sim is identified uniquely. Another problem that insist on the dataset is that there is no way to know in which part of the city the sims were connected.
 
-Is interesting to analyse this kind od data? Obviously yes! The city of Milan was the first city providing a free wifi and it is already now the only one that provides the relative data in the form of open data. This kind of initiatives in Italy are pretty rare so it worths to be studied. We should also remind that in the city are present many boutiques that are of great interest for the foreign people, public events about fashion, luxury and design, music events on the beaches near to Milan and so on. After these also we should remind that in the city is also present the italian stock exchange market and so it can be really interesting to investigate if a certain then in the city is linked to some events in the relative stock exchange market.
+Is interesting to analyse this kind od data? Obviously yes! The city of Milan was the first city providing a free wifi and it is already now the only one that provides the relative data in the form of open data. This kind of initiatives in Italy are pretty rare so it worths to be studied. We should also remind that in the city are present many boutiques that are of great interest for the foreign people, public events about fashion, luxury and design, music events on the beaches near to Milan and so on. After these also we should remind that in the city is also present the italian stock exchange market and so it can be really interesting to investigate if a certain number of foreign people in the city is linked to the change of an index in the stock exchange market.
 
 
 # Data Inspection
@@ -63,20 +63,27 @@ The dataset comes from the open data provided by all the municipalities of Milan
 Some characteristics of the DataSet are the fact that we have 2 columns "Date, Number_of_Foreign_Sims", the first is the date and the second the number of foreign people. We have in total 868 rows by 2 columns. The datasets have no NANs, no lacking days. The "Number_of_Foreign_Sims" is a discrete variable about total number of foreign sims in a certain Date connected to the OpenWifi of Milan.
 
 ```{r}
+# set the directory
 setwd("~/Documents/GitHub/STDA-project-proposal")
+# set the seed for the reproducibility
 set.seed(25061997)
 
+# import some libraries
 require(zoo)
 require(xts)
+
+# load the 3 dataset, they will be merged and cleaned
 data <- read.csv("opendatamilano2017.csv",sep = ";")
 data <- rbind(data, read.csv("opendatamilano2018.csv",sep = ";"))
 data <- rbind(data, read.csv("opendatamilano2019.csv",sep = ";"))
 
+# delete columns not interesting for the sake of the analysis
 data$prefix <- NULL
 data$country <- NULL
 data$num <- NULL
 data$total.ita.sim <- NULL
 
+# since foreign presence are registered by country and by day we aggregate to obtain only one entry for each day losing information of the country of the visitor
 ll <- aggregate.data.frame(data$total.foreign.sim,by=list(data$date),FUN=mean)
 names(ll)[2] <- "total.foreign.sim"
 names(ll)[1] <- "Date"
@@ -86,6 +93,7 @@ data <- ll
 Here we can read which are the most important numbers for the data, these are called the Tukey's five numbers and they are the minimum that is also important to check if there are errors in the data since it should be greater or equal to zero. Zero seems infeasible and it can be a NAN. The data we can read here below are not bad in the sense that no negative values are present but we can note that the space spanned by maximum - minimum is very large, probably the time serie suffers of great variability. The variability is a measure to calculate the volatility of a stock option. If the volatility is high this means the analysis will be more difficult for us since the stationarity is an assumptions for the model we are going to see in the next chapters.
 
 ```{r}
+#tukey 5 numbers
 print("minimum, lower-hinge, median, upper-hinge, maximum)")
 fivenum(data$total.foreign.sim)
 ```
@@ -93,6 +101,7 @@ fivenum(data$total.foreign.sim)
 We can check here the histogram of the data and we can see that the data is a bit skewed. In the technical jergon skewness is a measure of the fact that the data in the histogram is not symmetric over a certain accumulation point. For us the accumulation point is the mean and we can see it approximatively on the 100. We can note that the right tail is longer than the left tail. The skewness is not an appreciable characteristic for the time serie since it means that calculating the mean can have no sense and no assumptions on gaussianoty is feasible. Skewness also means that probaly constant variance assumption is not feasible and so no stationarity assumption can hold. These are all difficult facts to deal with. What we can do to cope with this problem? We can try to stabilize the data trying some transformations and checking which is the best one to have a more symmetrical distribution.
 
 ```{r}
+# histogram of the foreign sims count
 hist(data$total.foreign.sim)
 ```
 
@@ -101,29 +110,21 @@ The mean of the values as stated before id around 100 but it is useless to calcu
 We are going here to check the outliers with the boxplot, also called the whisker's plot. It is useful for example here in this case to see that there are many outliers on the upper part and no outliers on the lower part. This mean that there are many off-scale values that are too big. This is not a certainty but the boxplot is a good tool for outliers analysis. It is applied on the column of the foreign sims.
 
 ```{r}
+# boxplot of the sims count to find outliers
 boxplot(data$total.foreign.sim, xlab="Foreign sims")
 ```
 
 We know from an inspection of the data that at the end of the time serie are present some near-to-zero data due to some errors in the measuring way so we are going to eliminate them.
 
 ```{r}
-last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-6, to=length(data$total.foreign.sim), by=1)]
-#cat("here the data to investigate on:",last5,"\n")
-
-#cat("old length of the vector:", length(data$total.foreign.sim), "\n")
-last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
-#cat("here the data to be deleted:",last5,"\n")
-
+# deleted last 2 elements of the t.s.
 data <- data[-seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1),]
-#cat("new length of the vector:", length(data$total.foreign.sim), "\n")
-
-last5 <- data$total.foreign.sim[seq(from=length(data$total.foreign.sim)-2, to=length(data$total.foreign.sim), by=1)]
-#cat("the new last3 elements are:",last5,"\n")
 ```
 
 We choose here to transform the data from the original scale to the square root scale. The transformation was chosen after many empirical tries with the most promising ones.
 
 ```{r}
+# transforming data with a square root to find a good distribution of the data
 cat("before the transformation(data [0:5]):",data$total.foreign.sim[0:5],"\n")
 data$total.foreign.sim <- sqrt(data$total.foreign.sim)
 cat("after the transformation(data [0:5]):",data$total.foreign.sim[0:5],"\n")
@@ -132,19 +133,21 @@ cat("after the transformation(data [0:5]):",data$total.foreign.sim[0:5],"\n")
 The hist after the transformation here below. As we can see it in better than before, in the sense that now it is bell-shaped so calculating the mean and the standard deviation is meaningful. The only requirement is that at the end the reult is put to the power of two since this is a transformation of the original data.
 
 ```{r}
+# histogram after the transformation
 hist(data$total.foreign.sim)
 ```
 
 Now the boxplot is better because the overall number of outliers is less.
 
 ```{r}
+# boxplot of the data after the transformation
 boxplot(data$total.foreign.sim)
 ```
 
 # Time serie Analisys
 
 ```{r}
-require(xts)
+# better visualization with xts. Created data.ts that is a time serie object
 data$Date <- as.Date(data$Date, format = "%Y-%m-%d")
 data.xts <- xts(data$total.foreign.sim, order.by=data$Date, frequency = 7)
 data.ts <- ts(data$total.foreign.sim, frequency = 7)
@@ -153,6 +156,7 @@ data.ts <- ts(data$total.foreign.sim, frequency = 7)
 Here below the time serie is built and as we can see there are present many peaks, those days in whuch the peak is present are days of unexpected increase of connections and we hope this is a good proxy for an incremented number of foreign people in the city of Milan. The peaks are explained in few lines of text but we can imagine that some important events in the city are involved such as the fashion week. We can also note only from this graph that the overall number of connections decrease on the first days of december and it restart rapidly with a plateau until september(excluding peaks). We can so hypotesize a seasonality of one year for the data but since we have too few data to recognize a 1 year seasonality we are going to use a week seasonality. We attempted with all the possible seasonalities and this was the best and also the most explainable. For example a seasonality of 1 month is not sensible with this kind of data since every month is very different from the others. A seasonality of a week instead is useful to find the most frequented days of the week.
 
 ```{r}
+# plot of the ts with xts
 main <- "foreign sim per day"
 ylab<-"Tot of sim in that day"
 plot(data.xts,ylab=ylab,main=main)
@@ -161,7 +165,8 @@ plot(data.xts,ylab=ylab,main=main)
 Here we can see the whole time serie folded on a week. Before doing this folding operation we checked that the $5^th$ of June is a Monday, that is our starting point. This is because is otherwise an offset would should be applied to rescale. We can note that the most frequented days are the friday and saturday. It is not a great news but it can be important for the sellers to know quantitatively how much they can sell on the days of the week.
 
 ```{r}
-boxplot(data.ts~cycle(data.ts),names=c("Mo","Tu","We","Th","Fr","Sa","Su"))
+# boxplot by week
+boxplot(data.ts~cycle(data.ts),names=c("Mo","Tu","We","Th","Fr","Sa","Su"), ylab="number of sims",xlab="day of the week")
 ```
 
 ## Peaks Explanation
@@ -169,6 +174,7 @@ boxplot(data.ts~cycle(data.ts),names=c("Mo","Tu","We","Th","Fr","Sa","Su"))
 Many peaks are present and we are going here to explain some of them, the most important ones.
 
 ```{r}
+# searching the maximum number of sims connected, assumed to be an outlier value
 a <- max(data$total.foreign.sim)
 b <- data$Date[data$total.foreign.sim==a]
 cat("the highest number of connected sims happened in the days: ",as.character.Date(b)," \n")
@@ -192,6 +198,7 @@ We can note that in the 2017 and 2019 the date(17/06) is in both cases a plateau
 Now It is interesting to find the trend to recognise if it is going to increase or decrease. In both case it is interesting to discuss because it can be that people is encouraged to use more the personal internet or a personal hotspot due to the decreasing cost of the tariff plans. For example it is possible that on the long run the public wifi will be avoided by people bacause of no need, of low security or slow network or restrictions on use.
 
 ```{r}
+# finding the trend with a m.a.
 require(fpp)
 require(forecast)
 trendpattern = timeSeries::filter(data.ts, filter = rep(1/15,15), sides=2)
@@ -202,6 +209,7 @@ lines(trendpattern,col="red")
 Here we are going to expose the seasonality and the noise detrending. It is all about taking the trend calculated in the previous step and subtracting it from the the data. The remaing part is the seasonality and the noise. Some NaNs in this plot are present so we omit them. This is becuase of the fact that the mean is not defined on the all time serie but only in the central part, the borders are undefined. As we can see it does not seem that it is present a clear seasonality and also it is not stationary. After some experimentations we know that no other decompositions or operations can improve this situation so we move to the arima fitting. We tried to decompose in many ways also using multi seasonalities decomposition but no way that a seasonality or a stationary time serie is found.
 
 ```{r}
+# finding the seasonlity and the residuals throught the elimination of the trend
 seasonality <- data.ts - trendpattern
 cat("number of nans: ",sum(is.na(seasonality)),"\n")
 seasonality <- na.omit(seasonality)
@@ -211,6 +219,7 @@ plot(seasonality)
 Now we split the data for being able to test on them
 
 ```{r}
+# splitting the data into train and test to forecast with arima
 require(TSstudio)
 split <- ts_split(ts.obj = data.ts, sample.out = hh)
 
@@ -230,21 +239,24 @@ We searched for more than one seasonlity with the msts/mstl functions investigat
 To find the best arima in a such complicate time serie we are going to exploit a grid search algorithm done via the auto arima function provided by the fpp package. This is not the cheapest way of doing but after many and many acf and pacf difficult to be read we decided to use this tool. It is going to search for all the most feasible combinations of the parameters (p,d,q) fot the non-seasonal part and the (p,d,q) for the seasonal part of frequency "[7]". We would like to remember that p is the number of predecessors that are correlated to the current value in the ar model, the d is the number of differentiations(to move the time serie into a more stationary one) and the last is the q that is the number of values to be used to calculate the moving average in one point, the moving average is symmetric.
 
 ```{r}
+# difficult to identify the a.r. and m.a. contributions through the acf and pacf plots. we are using the auto.arima function from the hyndaman's package.
 require(fpp)
 require(forecast)
 fit <- auto.arima(data.ts,stepwise=TRUE,trace=FALSE,ic = "bic", approximation = FALSE)
-# fit
 ```
 
 Here we are going to plot a forecast on a part of the data that was never seen by the arima model.
 
 ```{r}
+# forecasting with the previous model. We used the ggplot graphical capabilities
+require(ggplot2)
 forecast(fit, h=hh) %>% autoplot() + autolayer(testing)
 ```
 
 The accuracy on the test set is few percentages points lower than on the training set. We are using 100 points. Reading the data the results are not good as we can imagine, we would like a 0% MAPE and 0 for the RMSE. This is obviously not possible because the data is very volative and not stationary, to reach this point we modified a lot the time serie so the error is obviously present but as we can see here above the prediction is not so far away from the ground truth.
 
 ```{r}
+# we calculate the accuracy of the forecasted values
 pred <- forecast(fit, h=hh)
 accuracy(pred, testing)
 ```
@@ -252,15 +264,18 @@ accuracy(pred, testing)
 Actually here below we can see that residuals are not pretty good in the sense that is not so clear if we should prefer a AR model or a MA model but after many weeks of attempts with many models, all the poossible seasonalities, all the decomposition, all the tricks available i'm pretty sure that this is the best trade-off between complexity of the models used, accuracy and processing of the dataset.
 
 ```{r}
+# display of the residuals after the fit. Difficult to find ar and ma parts
 tsdisplay(residuals(fit))
 ```
 
 ```{r}
+# test of stationarity Lj-Box
 lb <- Box.test(residuals(fit), lag = 24, type = "Ljung-Box")
 lb
 ```
 
 ```{r}
+# test of stationarity BoxPierce
 bp <- Box.test(residuals(fit), lag = 24, type = "Box-Pierce")
 bp
 ```
@@ -276,6 +291,15 @@ The lesson I learned from this dataset is that the most foreign come after the m
 - Time series analysis and application, Shumway, Stoffer
 - Statistics for Spatio Temporal Data Analysis, Cressie, Wikle
 - The slides and labs of the course made by professor Isadora Villalobos Antoniano
+- Forecasting: Principles and Practice, Rob J Hyndman and George Athanasopoulos
+- https://www.statmethods.net/advstats/timeseries.html
+- https://www.analyticsvidhya.com/blog/2015/12/complete-tutorial-
+time-series-modeling/
+- https://cran.r-project.org/web/packages/forecast/forecast.pdf
+- https://a-little-book-of-r-for-time-series.readthedocs.io/en/latest/
+src/timeseries.html
+- https://people.duke.edu/~rnau/411arim.htm
+- https://online.stat.psu.edu/stat510/lesson/3
 - [1] http://www.milanotoday.it/green/life/nuovi-hotspot-open-wifi-milano.html
 - [2] https://www.mobileworld.it/2017/08/07/roaming-gratis-europa-condizioni-
 fair-use-114077/
@@ -293,6 +317,7 @@ street-style-il-17-giugno-2017-a-milano-146439606.html
 17-giugno-a-milano-monza/
 - [10] https://www.borsaitaliana.it/borsa/indici/indici-in-  
 continua/grafico.html?indexCode=FTSEMIB&lang=it
+- [11] https://www.mondomobileweb.it/147642-app-iliad-ritornano-alcune-applicazioni-di-terze-parti/
 
 
 
